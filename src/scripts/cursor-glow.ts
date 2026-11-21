@@ -76,8 +76,10 @@ export function mountCursorGlow(): void {
     }
 
     const rect = target.getBoundingClientRect();
-    const localX = e.clientX - rect.left;
-    const localY = e.clientY - rect.top;
+    const scaleX = rect.width ? target.offsetWidth / rect.width : 1;
+    const scaleY = rect.height ? target.offsetHeight / rect.height : 1;
+    const localX = (e.clientX - rect.left) * scaleX;
+    const localY = (e.clientY - rect.top) * scaleY;
 
     let state = states.get(target);
     if (!state) {

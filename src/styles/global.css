@@ -99,14 +99,14 @@ a {
   position: relative;
   z-index: 2;
   min-height: 100dvh;
-  padding: clamp(0.75rem, 2.5vw, 2.5rem) clamp(0.5rem, 2.5vw, 2rem);
+  padding: clamp(0.65rem, 2.5vw, 2.5rem) clamp(0.4rem, 2vw, 2rem);
   display: flex;
   justify-content: center;
   align-items: flex-start;
 }
 
 .codex-sheet {
-  font-size: clamp(1.06rem, 0.35vw + 1rem, 1.18rem);
+  font-size: 1.125rem;
   position: relative;
   width: min(52rem, 100%);
   border-radius: 12px;
@@ -389,7 +389,7 @@ html:not(.dark) .sigil-moon { opacity: 0; transform: scale(0.4) rotate(60deg); }
 
 .site-main,
 .site-footer {
-  padding: 1.5rem clamp(0.9rem, 3.5vw, 2.5rem);
+  padding: 1.5rem clamp(0.75rem, 3vw, 2.5rem);
 }
 
 .site-footer {
@@ -528,6 +528,33 @@ html.dark .site-main a {
   margin-top: -0.35rem;
 }
 
+.page-scale-frame {
+  width: min(29rem, 100%);
+  margin: 0 auto;
+}
+
+.page-scale-content {
+  width: 29rem;
+  font-size: 1.125rem;
+  transform-origin: top left;
+}
+
+.page-scale-content h1 {
+  font-size: 1.85em;
+  text-wrap: balance;
+}
+
+.page-scale-content h2,
+.page-scale-content h3 {
+  font-size: 1.35em;
+  text-wrap: balance;
+}
+
+.page-scale-content p,
+.page-scale-content li {
+  text-wrap: pretty;
+}
+
 .prose {
   width: 100%;
   margin: 0;
@@ -581,7 +608,7 @@ html.dark .prose :not(pre) > code {
 }
 
 .prose pre.astro-code {
-  font-size: 0.82em;
+  font-size: 0.7em;
   padding: 1.1rem 1.2rem;
   border-radius: 10px;
   border: 1px solid var(--border);

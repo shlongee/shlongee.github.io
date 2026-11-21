@@ -1,23 +1,29 @@
 ---
 title: "HDR Bloom in Raylib: Fixing Banding with Float16"
-description: "How to build a 5-mip HDR bloom pass in Raylib using GLSL, fix two BeginDrawing and #version 330 traps, and eliminate banding with float16."
+description: >
+  How to build a 5-mip GLSL bloom pass in Raylib,
+  dodge two drawing traps, and defeat color banding with FP16.
 pubDate: 2026-11-15
 tags: ["glsl", "shaders", "raylib", "hdr", "bloom"]
 ---
 
 import Float16Visualizer from '../../components/Float16Visualizer.astro';
 
-Bright objects look flat unless light spills softly around them. Here is how I built a fast **HDR bloom spell** in [Raylib](/tags/raylib/)—and why **8-bit colors** broke it.
+Bright objects look flat unless soft light spills around them.<br/>
+Here is how I built a fast HDR bloom pass in [Raylib](/tags/raylib/)<br/>
+and fixed 8-bit banding.
 
-## 1. How the 5-Mip Bloom Chain Works (13-Tap Downsample & Upsample)
-Instead of running one giant slow blur, you shrink the bright parts down 5 times and add them back up:
+## 1. The 5-Mip Bloom Chain (13-Tap Blur)
+Instead of running one slow giant blur,<br/>
+shrink the bright pixels five times and blend them
+back up:
 
-* **Prefilter** bright pixels above a soft threshold.
-* **Downsample** 5 times using Jimenez's 13-tap filter.
-* **Upsample & Blend** each level back onto the final frame.
+* **Prefilter** pixels above a soft-knee threshold.
+* **Downsample** 5× with Jimenez’s 13-tap filter.
+* **Upsample** and blend each mip onto the frame.
 
 ```glsl
-// Soft knee prefilter: smooth transition instead of a hard cutoff
+// Soft knee (smooth transition) Prefilter 
 vec3 softThreshold(vec3 color, float threshold, float knee) {
   float br = max(color.r, max(color.g, color.b));
   float soft = clamp(br - threshold + knee, 0.0, 2.0 * knee);
@@ -27,21 +33,31 @@ vec3 softThreshold(vec3 color, float threshold, float knee) {
 }
 ```
 
-## 2. Two Raylib & GLSL Bugs: BeginDrawing() and #version 330
-1. **The Double `BeginDrawing()` Trap:** Calling `EndDrawing()` inside `ApplyBloom()` and again in `main()` cut my framerate in half and flickered UI text.
-2. **The Silent `#version 330` Mistake:** Missing that first line in the [GLSL](/tags/glsl/) shader silently broke my `compositeFS` uniform updates.
+## 2. Bugs: BeginDrawing() & #version 330
+1. **Double `BeginDrawing()`:** <br/>
+Calling `EndDrawing()` inside `ApplyBloom()` and `main()`<br/>
+halved FPS and flickered UI text.
+2. **Missing `#version 330`:**<br/>
+Omitting that header in the [GLSL](/tags/glsl/) fragment shader<br/>
+broke `compositeFS` uniform updates.
 
-## 3. Why Float16 (R16G16B16A16) Fixes 8-Bit Color Banding
-An 8-bit channel (`R8G8B8A8`) only has `256` fixed steps (`1/255`). Faint glow tails get rounded into stairs—and high bloom intensity blows those stairs up into hard rings.
+## 3. Why Float16 Fixes 8-Bit Color Banding
+An 8-bit channel `(R8G8B8A8)`<br/>
+stores 256 fixed steps `(1/255)`.<br/>
+Faint glow tails snap into stairs,<br/>
+and strong bloom turns them into rings.
 
-`float16` (`R16G16B16A16`) uses tiny exponents near zero, keeping faint [HDR](/tags/hdr/) light silky smooth:
+Float16 `(R16G16B16A16)` packs tiny exponents near zero,<br/>
+keeping faint [HDR](/tags/hdr/)
+light silky smooth:
 
 <Float16Visualizer />
 
-## 4. 720p GPU Profiling: Bloom Pass Frame Time
-* **Bloom cost at 720p (Intel UHD):** ~0.52 ms per frame.
-* **`R16G16B16A16` vs `R8G8B8A8`:** +0.08 ms/frame for completely smooth glow.
+## 4. 720p GPU Profiling Notes
+* **720p cost (Intel UHD):** ~0.52 ms per frame.
+* **`R16G16B16A16` vs `R8G8B8A8`:** +0.08 ms for smooth glow.
 
 ## Related Spells
-* See how exponential core-plus-halo glow carries over to WebGL particle typography in [Persistent WebGL Shaders & Particle Text in Astro](/blog/02-building-shlongeeland/).
+* Explore exponential glow in WebGL:<br/>
+[Persistent WebGL Shaders & Particle Text in Astro](/blog/02-building-shlongeeland/).
 * Browse more notes in [#shaders](/tags/shaders/) and [#bloom](/tags/bloom/).

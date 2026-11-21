@@ -100,7 +100,11 @@ const {
         <div class="codex-sheet">
           <Header />
           <main class="site-main">
-            <slot />
+            <div class="page-scale-frame" data-page-scale-frame>
+              <div class="page-scale-content" data-page-scale-content>
+                <slot />
+              </div>
+            </div>
           </main>
           <Footer />
         </div>
@@ -111,10 +115,12 @@ const {
       import { mountSpaceWormhole } from "../scripts/space-wormhole";
       import { mountCursorGlow } from "../scripts/cursor-glow";
       import { mountArcaneControls } from "../scripts/arcane-controls";
+      import { mountPageScaler } from "../scripts/page-scaler";
 
       mountArcaneControls();
       mountSpaceWormhole();
       mountCursorGlow();
+      mountPageScaler();
     </script>
   </body>
 </html>

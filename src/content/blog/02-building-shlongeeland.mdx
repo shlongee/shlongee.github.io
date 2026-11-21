@@ -1,6 +1,8 @@
 ---
 title: "Persistent WebGL Shaders & Particle Text in Astro"
-description: "Inside Shlongeeland: keeping a Three.js WebGL canvas alive across Astro ClientRouter transitions, fixing GLSL atan() seams, and instanced particle text."
+description: |
+  Three.js WebGL canvas alive across Astro routes,
+  fix GLSL atan() seams, and render instanced particle text.
 pubDate: 2026-11-21
 tags: ["astro", "webgl", "threejs", "glsl", "shaders"]
 ---
@@ -8,18 +10,27 @@ tags: ["astro", "webgl", "threejs", "glsl", "shaders"]
 import SeamVisualizer from '../../components/SeamVisualizer.astro';
 import ParticleBloomVisualizer from '../../components/ParticleBloomVisualizer.astro';
 
-This blog is built with [Astro](/tags/astro/) for fast static pages and [Three.js](/tags/threejs/) for custom [WebGL](/tags/webgl/) shaders. Here is how all the pieces fit together.
+This site pairs [Astro](/tags/astro/) static pages with [Three.js](/tags/threejs/) and
+[WebGL](/tags/webgl/) shaders. 
+Here is how the pieces fit together:
 
-## 1. Persistent WebGL Canvas with Astro ClientRouter (transition:persist)
-When you jump from **Home** to **Blog**, the aurora never flickers or restarts. Astro's `ClientRouter` swaps only the foreground page while keeping the background `<canvas>` alive with `transition:persist`.
+## 1. Persistent Canvas via Astro ClientRouter
+Jumping from **Home** to **Blog** never resets the aurora.<br/>
+Astro’s `ClientRouter` swaps page content while.. `transition:persist` keeps the WebGL `<canvas>` running.
 
-## 2. Fixing the Polar atan() Seam in GLSL Wormhole Shaders
-Using `atan(y, x)` for polar [GLSL shaders](/tags/glsl/) creates a sharp cut where `−π` jumps back to `+π`. Instead, we feed seamless circle coordinates `(cosθ, sinθ, depth)` into 3D noise and add a subtle helical wobble so the tunnel coils like a spring:
+## 2. Fixing the Polar atan() Seam in GLSL
+Raw `atan(y, x)` jumps sharply where `−π` wraps to `+π`.<br/>
+Feeding seamless circle coords `(cosθ, sinθ, depth)`<br/>
+into 3D noise with a gentle helical wobble heals the seam:
 
 <SeamVisualizer />
 
-## 3. Three.js Instanced Title Particles with Exponential Glow
-To draw **SHLONGEELAND** in particles, we paint the title onto a hidden 2D canvas, turn bright pixels into instanced quads via `InstancedBufferGeometry`, and shade each dot with an exponential **core + halo** glow:
+## 3. Instanced Three.js Title Particles
+To render **SHLONGEELAND** in particles,<br/>
+we draw the title to a 2D canvas,<br/>
+ spawn quads with
+`InstancedBufferGeometry`,<br/>
+ and shade each dot with a **core + halo** glow:
 
 ```glsl
 float core = exp(-d * d * 6.5);
@@ -28,10 +39,16 @@ float halo = exp(-d * 2.4) * 0.58;
 
 <ParticleBloomVisualizer />
 
-## 4. Interactive 3D Fresnel Mushrooms & Static Preact Search
-* **3D Mushrooms:** Built with `LatheGeometry` and a Fresnel rim shader so they drift with the stars and respond to clicks via `Raycaster`.
-* **Instant Search:** A static `/search-index.json` file built at compile time powers live tag and word filtering with **Preact**—no database needed.
+## 4. 3D Mushrooms & Static Preact Search
+* **3D Mushrooms:**<br/>
+Built with `LatheGeometry` and Fresnel rim lighting,<br/>
+drifting with the stars and clickable via `Raycaster`.
+* **Instant Search:**<br/>
+A compile-time `/search-index.json` powers live tag<br/>
+and word filtering in **Preact** with zero backend.
 
 ## Related Spells
-* If you want to see how smooth light falloff behaves in a C/GLSL post-processing pipeline, read [HDR Bloom in Raylib: Fixing Banding with Float16](/blog/01-hdr-bloom-report/).
-* Browse more notes in [#shaders](/tags/shaders/) and [#threejs](/tags/threejs/).
+* Read how soft HDR glow avoids banding in<br/>
+[HDR Bloom in Raylib: Fixing Banding with Float16](/blog/01-hdr-bloom-report/).
+* Browse more reports in<br/>
+[#shaders](/tags/shaders/) and [#threejs](/tags/threejs/).
