@@ -1,10 +1,20 @@
 ---
+export interface BreadcrumbItem {
+  name: string;
+  path: string;
+}
+
 export interface Props {
   title: string;
   description: string;
   path?: string;
   ogType?: "website" | "article";
   pubDate?: Date;
+  updatedDate?: Date;
+  tags?: string[];
+  rawTitle?: boolean;
+  ogImage?: string;
+  breadcrumbs?: BreadcrumbItem[];
 }
 
 const {
@@ -13,24 +23,95 @@ const {
   path = Astro.url.pathname,
   ogType = "website",
   pubDate,
+  updatedDate,
+  tags = [],
+  rawTitle = false,
+  ogImage,
+  breadcrumbs = [],
 } = Astro.props;
 
 const siteUrl = Astro.site?.toString().replace(/\/$/, "") ?? "https://shlongee.github.io";
 const canonical = new URL(path, `${siteUrl}/`).toString();
-const fullTitle = title === "Code spells, shaders, and dev notes by Shlongee." ? "Shlongeeland" : `${title} — Shlongeeland`;
+const fullTitle = rawTitle ? title : `${title} — Shlongeeland`;
+const imageUrl = ogImage ? new URL(ogImage, `${siteUrl}/`).toString() : undefined;
+
+const schemaGraph: Record<string, unknown>[] = [
+  {
+    "@type": "WebSite",
+    "@id": `${siteUrl}/#website`,
+    url: `${siteUrl}/`,
+    name: "Shlongeeland",
+    description:
+      "Technical devlog by Shlongee covering GLSL shaders, Raylib HDR rendering, Three.js WebGL experiments, and Astro engineering.",
+    potentialAction: {
+      "@type": "SearchAction",
+      target: `${siteUrl}/blog/?q={search_term_string}`,
+      "query-input": "required name=search_term_string",
+    },
+  },
+  {
+    "@type": "Person",
+    "@id": `${siteUrl}/#author`,
+    name: "Shlongee",
+    url: `${siteUrl}/about/`,
+    sameAs: ["https://github.com/shlongee"],
+  },
+];
+
+if (ogType === "article" && pubDate) {
+  schemaGraph.push({
+    "@type": "BlogPosting",
+    mainEntityOfPage: { "@type": "WebPage", "@id": canonical },
+    headline: title,
+    description,
+    datePublished: pubDate.toISOString(),
+    ...(updatedDate && { dateModified: updatedDate.toISOString() }),
+    author: { "@id": `${siteUrl}/#author` },
+    publisher: { "@id": `${siteUrl}/#website` },
+    ...(tags.length > 0 && { keywords: tags.join(", ") }),
+    ...(imageUrl && { image: imageUrl }),
+  });
+}
+
+if (breadcrumbs.length > 0) {
+  schemaGraph.push({
+    "@type": "BreadcrumbList",
+    itemListElement: breadcrumbs.map((crumb, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: crumb.name,
+      item: new URL(crumb.path, `${siteUrl}/`).toString(),
+    })),
+  });
+}
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": schemaGraph,
+};
 ---
 
 <title>{fullTitle}</title>
 <meta name="description" content={description} />
+<meta name="author" content="Shlongee" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+
 <meta property="og:type" content={ogType} />
+<meta property="og:locale" content="en_US" />
 <meta property="og:site_name" content="Shlongeeland" />
 <meta property="og:title" content={fullTitle} />
 <meta property="og:description" content={description} />
 <meta property="og:url" content={canonical} />
+{imageUrl && <meta property="og:image" content={imageUrl} />}
 {pubDate && <meta property="article:published_time" content={pubDate.toISOString()} />}
-<meta name="twitter:card" content="summary" />
+{updatedDate && <meta property="article:modified_time" content={updatedDate.toISOString()} />}
+{tags.map((tag) => <meta property="article:tag" content={tag} />)}
+
+<meta name="twitter:card" content={imageUrl ? "summary_large_image" : "summary"} />
 <meta name="twitter:title" content={fullTitle} />
 <meta name="twitter:description" content={description} />
+{imageUrl && <meta name="twitter:image" content={imageUrl} />}
+
 <link rel="canonical" href={canonical} />
 <link rel="alternate" type="application/rss+xml" title="Shlongeeland RSS" href={`${siteUrl}/rss.xml`} />
+<script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />

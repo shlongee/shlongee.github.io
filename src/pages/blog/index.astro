@@ -18,13 +18,21 @@ const initialPosts = posts.map((post) => ({
 const allTags = Array.from(
   new Set(posts.flatMap((post) => post.data.tags)),
 ).sort((a, b) => a.localeCompare(b));
+
+const breadcrumbs = [
+  { name: "Home", path: "/" },
+  { name: "Blog", path: "/blog/" },
+];
 ---
 
 <BaseLayout
-  title="Blog"
-  description="Code spells, shader notes, and dev stories."
+  title="Shader & Graphics Devlog"
+  description="Practical notes on GLSL shaders, Raylib HDR bloom, Three.js WebGL effects, and graphics bugs turned into clear mental models."
+  breadcrumbs={breadcrumbs}
 >
-  <h1>Spellbook</h1>
-  <p class="page-lede">Simple notes on code, shaders, and bugs turned into magic.</p>
+  <h1>The Shader Spellbook</h1>
+  <p class="page-lede">
+    Dev reports on GLSL shaders, real-time rendering, WebGL experiments, and hard-won bug fixes.
+  </p>
   <BlogSearch client:load initialPosts={initialPosts} allTags={allTags} />
 </BaseLayout>

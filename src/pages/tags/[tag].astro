@@ -2,6 +2,18 @@
 import { getCollection } from "astro:content";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 
+const TAG_DESCRIPTIONS: Record<string, string> = {
+  glsl: "GLSL fragment and vertex shader techniques, polar math, bloom passes, and interactive WebGL visualizers.",
+  shaders: "Real-time shader spellcraft: GLSL lighting, HDR bloom chains, seamless procedural noise, and Fresnel effects.",
+  raylib: "Real-time rendering, custom shader pipelines, post-processing, and GPU profiling in Raylib.",
+  hdr: "High dynamic range framebuffers, float16 precision, and eliminating 8-bit color banding.",
+  bloom: "Multi-mip bloom chains, soft-knee thresholding, Jimenez 13-tap filtering, and exponential particle glow.",
+  webgl: "Custom RawShaderMaterial experiments, seamless polar wormhole tunnels, and GPU-rendered typography in WebGL.",
+  threejs: "Interactive Three.js scenes, instanced buffer geometry, procedural LatheGeometry meshes, and raycasting.",
+  astro: "Static site engineering with Astro ClientRouter, persistent WebGL canvases, MDX visualizers, and Preact search.",
+  graphics: "Graphics programming experiments, rendering pipelines, and visual math notes.",
+};
+
 export async function getStaticPaths() {
   const posts = await getCollection("blog", ({ data }) => !data.draft);
   const uniqueTags = Array.from(new Set(posts.flatMap((p) => p.data.tags)));
@@ -17,11 +29,24 @@ export async function getStaticPaths() {
 }
 
 const { tag, posts } = Astro.props;
+const tagDescription =
+  TAG_DESCRIPTIONS[tag] ?? `Dev reports and technical notes tagged with #${tag} on Shlongeeland.`;
+
+const breadcrumbs = [
+  { name: "Home", path: "/" },
+  { name: "Tags", path: "/tags/" },
+  { name: `#${tag}`, path: `/tags/${encodeURIComponent(tag)}/` },
+];
 ---
 
-<BaseLayout title={`#${tag}`} description={`Posts tagged with #${tag} on Shlongeeland.`}>
+<BaseLayout
+  title={`#${tag} Articles & Notes`}
+  description={tagDescription}
+  breadcrumbs={breadcrumbs}
+>
   <p><a href="/tags/">← All tags</a></p>
   <h1>#{tag}</h1>
+  <p class="page-lede">{tagDescription}</p>
   <ul class="post-list">
     {posts.map((post) => (
       <li class="post-card">

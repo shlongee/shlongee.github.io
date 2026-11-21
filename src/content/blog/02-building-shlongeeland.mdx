@@ -1,25 +1,25 @@
 ---
-title: "Report #2: Weaving the Shlongeeland Spellbook"
-description: "A simple tour of the Astro static site, seamless aurora wormhole shader, 3D mushrooms, and glowing title particles."
+title: "Persistent WebGL Shaders & Particle Text in Astro"
+description: "Inside Shlongeeland: keeping a Three.js WebGL canvas alive across Astro ClientRouter transitions, fixing GLSL atan() seams, and instanced particle text."
 pubDate: 2026-11-21
-tags: ["astro", "webgl", "shaders", "threejs"]
+tags: ["astro", "webgl", "threejs", "glsl", "shaders"]
 ---
 
 import SeamVisualizer from '../../components/SeamVisualizer.astro';
 import ParticleBloomVisualizer from '../../components/ParticleBloomVisualizer.astro';
 
-This blog is built with **Astro** for fast static pages and **Three.js** for custom WebGL shaders. Here is how all the pieces fit together.
+This blog is built with [Astro](/tags/astro/) for fast static pages and [Three.js](/tags/threejs/) for custom [WebGL](/tags/webgl/) shaders. Here is how all the pieces fit together.
 
-## 1. Never Resetting the Sky
+## 1. Persistent WebGL Canvas with Astro ClientRouter (transition:persist)
 When you jump from **Home** to **Blog**, the aurora never flickers or restarts. Astro's `ClientRouter` swaps only the foreground page while keeping the background `<canvas>` alive with `transition:persist`.
 
-## 2. Fixing the Wormhole Seam
-Using `atan(y, x)` for polar shaders creates a sharp cut where `−π` jumps back to `+π`. Instead, we feed seamless circle coordinates `(cosθ, sinθ, depth)` into 3D noise and add a subtle helical wobble so the tunnel coils like a spring:
+## 2. Fixing the Polar atan() Seam in GLSL Wormhole Shaders
+Using `atan(y, x)` for polar [GLSL shaders](/tags/glsl/) creates a sharp cut where `−π` jumps back to `+π`. Instead, we feed seamless circle coordinates `(cosθ, sinθ, depth)` into 3D noise and add a subtle helical wobble so the tunnel coils like a spring:
 
 <SeamVisualizer />
 
-## 3. Glowing Title Particles
-To draw **SHLONGEELAND** in particles, we paint the title onto a hidden 2D canvas, turn bright pixels into instanced quads, and shade each dot with an exponential **core + halo** glow:
+## 3. Three.js Instanced Title Particles with Exponential Glow
+To draw **SHLONGEELAND** in particles, we paint the title onto a hidden 2D canvas, turn bright pixels into instanced quads via `InstancedBufferGeometry`, and shade each dot with an exponential **core + halo** glow:
 
 ```glsl
 float core = exp(-d * d * 6.5);
@@ -28,6 +28,10 @@ float halo = exp(-d * 2.4) * 0.58;
 
 <ParticleBloomVisualizer />
 
-## 4. Living 3D Mushrooms & Search
+## 4. Interactive 3D Fresnel Mushrooms & Static Preact Search
 * **3D Mushrooms:** Built with `LatheGeometry` and a Fresnel rim shader so they drift with the stars and respond to clicks via `Raycaster`.
 * **Instant Search:** A static `/search-index.json` file built at compile time powers live tag and word filtering with **Preact**—no database needed.
+
+## Related Spells
+* If you want to see how smooth light falloff behaves in a C/GLSL post-processing pipeline, read [HDR Bloom in Raylib: Fixing Banding with Float16](/blog/01-hdr-bloom-report/).
+* Browse more notes in [#shaders](/tags/shaders/) and [#threejs](/tags/threejs/).

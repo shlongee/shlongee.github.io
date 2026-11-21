@@ -1,15 +1,51 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+
+const breadcrumbs = [
+  { name: "Home", path: "/" },
+  { name: "About", path: "/about/" },
+];
 ---
 
-<BaseLayout title="About" description="About Shlongeeland and the magic of code.">
-  <h1>About</h1>
-  <p class="page-lede">Welcome to <strong>Shlongeeland</strong> — a cozy spellbook for programming.</p>
-  <p>
-    Here I write down what I learn while building <em>shaders</em>, rendering engines, and tools.
-    Every bug is just a strange spell waiting to be understood.
+<BaseLayout
+  title="About Shlongee & This Graphics Blog"
+  description="About Shlongeeland and Shlongee: writing practical deep dives on Raylib, GLSL shaders, HDR post-processing, Three.js WebGL, and Astro."
+  breadcrumbs={breadcrumbs}
+>
+  <h1>About Shlongee &amp; Shlongeeland</h1>
+  <p class="page-lede">
+    Welcome to <strong>Shlongeeland</strong> — a cozy technical spellbook for real-time graphics and creative code.
   </p>
+
   <p>
-    Read the <a href="/blog/">blog</a> or explore by <a href="/tags/">tags</a>.
+    I am <strong>Shlongee</strong>, and this devlog documents what I learn while building
+    <em>GLSL shaders</em>, custom rendering passes, and interactive web experiences. Every subtle
+    rendering bug—from 8-bit color banding to polar coordinate seams—is just a strange spell
+    waiting to be understood.
+  </p>
+
+  <h2>What You Will Find Here</h2>
+  <p>
+    Most reports include interactive visualizers, profiled frame timings, and clean shader code across
+    three core areas:
+  </p>
+  <ul>
+    <li>
+      <strong>Real-Time Rendering &amp; HDR:</strong> Multi-mip bloom chains, soft-knee thresholding,
+      and <code>float16</code> precision in <a href="/tags/raylib/">Raylib</a> and <a href="/tags/hdr/">HDR pipelines</a>.
+    </li>
+    <li>
+      <strong>WebGL &amp; Creative Shaders:</strong> Custom <code>RawShaderMaterial</code> tunnels,
+      seamless noise, instanced particle typography, and 3D meshes in <a href="/tags/threejs/">Three.js</a> and <a href="/tags/webgl/">WebGL</a>.
+    </li>
+    <li>
+      <strong>Static Web Engineering:</strong> Persistent WebGL canvases with <a href="/tags/astro/">Astro</a>
+      <code>ClientRouter</code>, MDX visualizers, and zero-backend Preact search.
+    </li>
+  </ul>
+
+  <p>
+    Browse the full <a href="/blog/">shader devlog</a>, explore <a href="/tags/glsl/">GLSL notes</a>,
+    view all <a href="/tags/">topics &amp; tags</a>, or subscribe via <a href="/rss.xml">RSS</a>.
   </p>
 </BaseLayout>

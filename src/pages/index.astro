@@ -3,8 +3,9 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 ---
 
 <BaseLayout
-  title="Shlongeeland"
-  description="Programming journey, graphics experiments, and dev reports by Shlongee."
+  title="Shlongeeland — GLSL Shaders, Raylib & WebGL Devlog"
+  description="Technical devlog by Shlongee covering GLSL shaders, Raylib HDR rendering, Three.js WebGL experiments, and Astro engineering."
+  rawTitle
   immersive
 >
   <section class="wormhole-home" aria-label="Shlongeeland">
@@ -16,12 +17,18 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       SHLONGEELAND
     </h1>
 
+    <p class="sr-only">
+      Shlongeeland is a technical graphics programming devlog by Shlongee covering GLSL shaders,
+      Raylib HDR bloom and float16 precision, Three.js WebGL wormhole and particle effects, and
+      persistent static sites with Astro.
+    </p>
+
     <nav class="wormhole-home__nav" aria-label="Primary navigation">
       <a class="wormhole-nav__btn" data-warp-link href="/blog/">Blog</a>
       <a class="wormhole-nav__btn" data-warp-link href="/tags/">Tags</a>
       <a class="wormhole-nav__btn" data-warp-link href="/about/">About</a>
     </nav>
-    
+
     <footer class="home-micro-footer">
       <a href="https://github.com/shlongee" rel="me noopener noreferrer" target="_blank">GitHub</a>
       <span aria-hidden="true">·</span>

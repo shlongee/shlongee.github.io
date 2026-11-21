@@ -9,12 +9,14 @@ export async function GET(context: APIContext) {
 
   return rss({
     title: "Shlongeeland",
-    description: "Code spells, shaders, and dev notes by Shlongee.",
+    description:
+      "GLSL shaders, Raylib HDR rendering, Three.js WebGL experiments, and Astro engineering notes by Shlongee.",
     site: context.site ?? "https://shlongee.github.io",
     items: posts.map((post) => ({
       title: post.data.title,
       pubDate: post.data.pubDate,
       description: post.data.description,
+      categories: post.data.tags,
       link: `/blog/${post.id}/`,
     })),
   });

@@ -7,19 +7,35 @@ export interface Props {
   pubDate: Date;
   updatedDate?: Date;
   tags: string[];
+  ogImage?: string;
 }
 
-const { title, description, pubDate, updatedDate, tags } = Astro.props;
+const { title, description, pubDate, updatedDate, tags, ogImage } = Astro.props;
 const formattedDate = pubDate.toLocaleDateString("en-US", {
   year: "numeric",
   month: "short",
   day: "numeric",
 });
+
+const breadcrumbs = [
+  { name: "Home", path: "/" },
+  { name: "Blog", path: "/blog/" },
+  { name: title, path: Astro.url.pathname },
+];
 ---
 
-<BaseLayout title={title} description={description} ogType="article" pubDate={pubDate}>
+<BaseLayout
+  title={title}
+  description={description}
+  ogType="article"
+  pubDate={pubDate}
+  updatedDate={updatedDate}
+  tags={tags}
+  ogImage={ogImage}
+  breadcrumbs={breadcrumbs}
+>
   <div class="post-scale-frame" data-post-scale-frame>
-    <article class="post-article" data-post-article>
+    <article class="post-article">
       <header class="post-header">
         <p class="post-meta">
           <time datetime={pubDate.toISOString()}>{formattedDate}</time>

@@ -1,15 +1,15 @@
 ---
-title: "Report #1: Teaching Light to Glow Without Banding"
-description: "How 5-mip bloom works in Raylib, two bugs that bit me, and why float16 melts hard glow rings away."
+title: "HDR Bloom in Raylib: Fixing Banding with Float16"
+description: "How to build a 5-mip HDR bloom pass in Raylib using GLSL, fix two BeginDrawing and #version 330 traps, and eliminate banding with float16."
 pubDate: 2026-11-15
-tags: ["graphics", "shaders", "raylib", "hdr", "bloom"]
+tags: ["glsl", "shaders", "raylib", "hdr", "bloom"]
 ---
 
 import Float16Visualizer from '../../components/Float16Visualizer.astro';
 
-Bright objects look flat unless light spills softly around them. Here is how I built a fast **bloom spell** in Raylib—and why **8-bit colors** broke it.
+Bright objects look flat unless light spills softly around them. Here is how I built a fast **HDR bloom spell** in [Raylib](/tags/raylib/)—and why **8-bit colors** broke it.
 
-## 1. The 5-Mip Bloom Chain
+## 1. How the 5-Mip Bloom Chain Works (13-Tap Downsample & Upsample)
 Instead of running one giant slow blur, you shrink the bright parts down 5 times and add them back up:
 
 * **Prefilter** bright pixels above a soft threshold.
@@ -27,17 +27,21 @@ vec3 softThreshold(vec3 color, float threshold, float knee) {
 }
 ```
 
-## 2. Two Bugs That Taught Me Things
+## 2. Two Raylib & GLSL Bugs: BeginDrawing() and #version 330
 1. **The Double `BeginDrawing()` Trap:** Calling `EndDrawing()` inside `ApplyBloom()` and again in `main()` cut my framerate in half and flickered UI text.
-2. **The Silent `#version 330` Mistake:** Missing that first line silently broke my `compositeFS` uniform updates.
+2. **The Silent `#version 330` Mistake:** Missing that first line in the [GLSL](/tags/glsl/) shader silently broke my `compositeFS` uniform updates.
 
-## 3. Why `float16` Beats 8-Bit Color
+## 3. Why Float16 (R16G16B16A16) Fixes 8-Bit Color Banding
 An 8-bit channel (`R8G8B8A8`) only has `256` fixed steps (`1/255`). Faint glow tails get rounded into stairs—and high bloom intensity blows those stairs up into hard rings.
 
-`float16` (`R16G16B16A16`) uses tiny exponents near zero, keeping faint light silky smooth:
+`float16` (`R16G16B16A16`) uses tiny exponents near zero, keeping faint [HDR](/tags/hdr/) light silky smooth:
 
 <Float16Visualizer />
 
-## 4. Quick Profiling Notes
+## 4. 720p GPU Profiling: Bloom Pass Frame Time
 * **Bloom cost at 720p (Intel UHD):** ~0.52 ms per frame.
 * **`R16G16B16A16` vs `R8G8B8A8`:** +0.08 ms/frame for completely smooth glow.
+
+## Related Spells
+* See how exponential core-plus-halo glow carries over to WebGL particle typography in [Persistent WebGL Shaders & Particle Text in Astro](/blog/02-building-shlongeeland/).
+* Browse more notes in [#shaders](/tags/shaders/) and [#bloom](/tags/bloom/).

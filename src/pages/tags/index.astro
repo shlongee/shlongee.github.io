@@ -10,11 +10,20 @@ for (const post of posts) {
   }
 }
 const tags = Array.from(counts.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+
+const breadcrumbs = [
+  { name: "Home", path: "/" },
+  { name: "Tags", path: "/tags/" },
+];
 ---
 
-<BaseLayout title="Tags" description="Browse all blog tags in Shlongeeland.">
-  <h1>Tags</h1>
-  <p class="page-lede">Pick a tag to filter notes.</p>
+<BaseLayout
+  title="Topics & Shader Tags"
+  description="Explore Shlongeeland dev reports by topic: GLSL, HDR bloom, Raylib, Three.js, WebGL shaders, and Astro architecture."
+  breadcrumbs={breadcrumbs}
+>
+  <h1>Topics &amp; Shader Tags</h1>
+  <p class="page-lede">Pick a topic to filter dev reports by shader, rendering, or web engineering cluster.</p>
   <ul class="tag-grid">
     {tags.map(([tag, count]) => (
       <li>

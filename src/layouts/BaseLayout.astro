@@ -2,7 +2,7 @@
 import { ClientRouter, fade } from "astro:transitions";
 import { Font } from "astro:assets";
 import "../styles/global.css";
-import Seo from "../components/Seo.astro";
+import Seo, { type BreadcrumbItem } from "../components/Seo.astro";
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
 import ArcaneControls from "../components/ArcaneControls.astro";
@@ -13,6 +13,11 @@ export interface Props {
   immersive?: boolean;
   ogType?: "website" | "article";
   pubDate?: Date;
+  updatedDate?: Date;
+  tags?: string[];
+  rawTitle?: boolean;
+  ogImage?: string;
+  breadcrumbs?: BreadcrumbItem[];
 }
 
 const {
@@ -21,6 +26,11 @@ const {
   immersive = false,
   ogType = "website",
   pubDate,
+  updatedDate,
+  tags = [],
+  rawTitle = false,
+  ogImage,
+  breadcrumbs = [],
 } = Astro.props;
 ---
 
@@ -30,7 +40,17 @@ const {
     <meta charset="UTF-8" />
     <Font cssVariable="--kejter" preload />
     <Font cssVariable="--morning-breeze" preload={[{ weight: 400, style: "normal" }]} />
-    <Seo title={title} description={description} ogType={ogType} pubDate={pubDate} />
+    <Seo
+      title={title}
+      description={description}
+      ogType={ogType}
+      pubDate={pubDate}
+      updatedDate={updatedDate}
+      tags={tags}
+      rawTitle={rawTitle}
+      ogImage={ogImage}
+      breadcrumbs={breadcrumbs}
+    />
     <ClientRouter />
     <script is:inline>
       (() => {
