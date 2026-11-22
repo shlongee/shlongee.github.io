@@ -7,15 +7,17 @@ export async function GET(context: APIContext) {
     (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
   );
 
+  const clean = (s: string) => s.replace(/\s+/g, " ").trim();
+
   return rss({
     title: "Shlongeeland",
     description:
       "GLSL shaders, Raylib HDR rendering, Three.js WebGL experiments, and Astro engineering notes by Shlongee.",
     site: context.site ?? "https://shlongee.github.io",
     items: posts.map((post) => ({
-      title: post.data.title,
+      title: clean(post.data.title),
       pubDate: post.data.pubDate,
-      description: post.data.description,
+      description: clean(post.data.description),
       categories: post.data.tags,
       link: `/blog/${post.id}/`,
     })),

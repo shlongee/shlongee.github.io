@@ -40,6 +40,7 @@ const {
     <meta charset="UTF-8" />
     <Font cssVariable="--kejter" preload />
     <Font cssVariable="--morning-breeze" preload={[{ weight: 400, style: "normal" }]} />
+    <Font cssVariable="--jetbrains-mono" />
     <Seo
       title={title}
       description={description}
@@ -59,6 +60,12 @@ const {
           const isDark =
             savedTheme === "dark" ||
             (!savedTheme && window.matchMedia("(prefers-color-scheme: dark)").matches);
+            
+          const savedScale = localStorage.getItem("shlongeeland-scale");
+          if (savedScale) {
+            document.documentElement.style.setProperty("--page-scale", savedScale);
+          }  
+
           document.documentElement.classList.toggle("dark", isDark);
           document.documentElement.classList.toggle(
             "crystal",
@@ -107,6 +114,29 @@ const {
             </div>
           </main>
           <Footer />
+        </div>
+
+        <div id="scale-popover" class="scale-popover" data-scale-popover hidden>
+          <div class="scale-popover__head">
+            <label for="page-scale-slider">Page Scale</label>
+            <strong data-scale-readout>1.50x</strong>
+          </div>
+          <input
+            id="page-scale-slider"
+            type="range"
+            min="0.7"
+            max="2.0"
+            step="0.05"
+            value="1.5"
+            data-scale-slider
+          />
+          <div class="scale-popover__foot">
+            <span>Narrow</span>
+            <button type="button" class="clear-btn scale-reset-btn" data-scale-reset>
+              Reset
+            </button>
+            <span>Wide</span>
+          </div>
         </div>
       </div>
     )}

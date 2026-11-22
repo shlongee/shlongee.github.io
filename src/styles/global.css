@@ -59,7 +59,7 @@ h1, h2, h3, h4, h5, h6,
 
 pre,
 code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-family: var(--jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
 a,
@@ -99,7 +99,7 @@ a {
   position: relative;
   z-index: 2;
   min-height: 100dvh;
-  padding: clamp(0.65rem, 2.5vw, 2.5rem) clamp(0.4rem, 2vw, 2rem);
+  padding: clamp(0.5rem, 2vw, 2.25rem) clamp(0.35rem, 1.8vw, 1.75rem);
   display: flex;
   justify-content: center;
   align-items: flex-start;
@@ -107,8 +107,11 @@ a {
 
 .codex-sheet {
   font-size: 1.125rem;
+  width: min(
+    calc(29rem * var(--page-scale, 1.5) + clamp(1.3rem, 5vw, 4.5rem) + 2px),
+    100%
+  );
   position: relative;
-  width: min(52rem, 100%);
   border-radius: 12px;
   border: 1px solid rgba(58, 148, 138, 0.28);
   color: var(--text);
@@ -186,6 +189,58 @@ html.dark .codex-sheet::before {
 .codex-sheet > * {
   position: relative;
   z-index: 1;
+}
+
+.codex-sheet > header {
+  z-index: 20;
+}
+
+.scale-control {
+  position: relative;
+}
+
+.scale-popover {
+  position: fixed;
+  z-index: 50;
+  width: 220px;
+  padding: 0.75rem 0.85rem;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--sheet-bg);
+  color: var(--text);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35), 0 0 22px rgba(var(--glow-rgb), 0.18);
+  display: grid;
+  gap: 0.55rem;
+  font-size: 0.88rem;
+}
+
+.scale-popover[hidden] {
+  display: none;
+}
+
+.scale-popover__head,
+.scale-popover__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.scale-popover__foot {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.scale-popover input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent);
+  touch-action: none;
+  cursor: pointer;
+}
+
+.scale-reset-btn {
+  padding: 0.2rem 0.55rem;
+  font-size: 0.78rem;
 }
 
 /* Fix Android scroll when starting touch on links/cards inside blog */
@@ -266,7 +321,7 @@ header {
   border: 1px solid transparent;
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 0.96rem;
+  font-size: 1.1rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   text-decoration: none;
@@ -389,7 +444,7 @@ html:not(.dark) .sigil-moon { opacity: 0; transform: scale(0.4) rotate(60deg); }
 
 .site-main,
 .site-footer {
-  padding: 1.5rem clamp(0.75rem, 3vw, 2.5rem);
+  padding: 1.5rem clamp(0.65rem, 2.5vw, 2.25rem);
 }
 
 .site-footer {
@@ -529,7 +584,7 @@ html.dark .site-main a {
 }
 
 .page-scale-frame {
-  width: min(29rem, 100%);
+  width: 100%;
   margin: 0 auto;
 }
 
@@ -608,7 +663,7 @@ html.dark .prose :not(pre) > code {
 }
 
 .prose pre.astro-code {
-  font-size: 0.7em;
+  font-size: 0.65em;
   padding: 1.1rem 1.2rem;
   border-radius: 10px;
   border: 1px solid var(--border);
@@ -732,14 +787,7 @@ body.immersive {
   transition: transform 150ms ease, border-color 180ms ease, box-shadow 180ms ease, color 160ms ease;
 }
 
-.post-scale-frame {
-  width: min(29rem, 100%);
-  margin: 0 auto;
-}
-
 .post-article {
-  width: 29rem;
-  font-size: 1.125rem; /* Fixed base (~18px) so header & prose match everywhere */
   transform-origin: top left;
 }
 
@@ -1025,4 +1073,11 @@ html.dark .post-card {
   overflow: hidden;
   clip: rect(0 0 0 0);
   white-space: nowrap;
+}
+
+.post-header h1,
+.post-description,
+.post-card__link h2,
+.post-card__link p {
+  white-space: pre-line;
 }

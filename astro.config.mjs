@@ -19,6 +19,18 @@ export default defineConfig({
   fonts: [
     {
       provider: fontProviders.local(),
+      name: "JetBrains Mono",
+      cssVariable: "--jetbrains-mono",
+      options: {
+        variants: [
+          { src: ["./src/assets/fonts/JetBrainsMono-Regular.woff2"], weight: 400, style: "normal" },
+          { src: ["./src/assets/fonts/JetBrainsMono-Italic.woff2"], weight: 400, style: "italic" },
+          { src: ["./src/assets/fonts/JetBrainsMono-Bold.woff2"], weight: 700, style: "normal" },
+        ],
+      },
+    },
+    {
+      provider: fontProviders.local(),
       name: "Kejter",
       cssVariable: "--kejter",
       fallbacks: ["Georgia", "serif"],

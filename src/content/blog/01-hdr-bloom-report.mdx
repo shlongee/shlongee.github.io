@@ -1,8 +1,11 @@
 ---
-title: "HDR Bloom in Raylib: Fixing Banding with Float16"
-description: >
-  How to build a 5-mip GLSL bloom pass in Raylib,
-  dodge two drawing traps, and defeat color banding with FP16.
+title: |-
+  HDR Bloom in Raylib:
+  Fixing Banding with Float16
+description: |-
+  Build a 5-mip GLSL bloom pass in Raylib,
+  dodge two drawing traps,
+  and defeat color banding with FP16!
 pubDate: 2026-11-15
 tags: ["glsl", "shaders", "raylib", "hdr", "bloom"]
 ---
@@ -11,7 +14,7 @@ import Float16Visualizer from '../../components/Float16Visualizer.astro';
 
 Bright objects look flat unless soft light spills around them.<br/>
 Here is how I built a fast HDR bloom pass in [Raylib](/tags/raylib/)<br/>
-and fixed 8-bit banding.
+and fixed 8-bit banding:
 
 ## 1. The 5-Mip Bloom Chain (13-Tap Blur)
 Instead of running one slow giant blur,<br/>
