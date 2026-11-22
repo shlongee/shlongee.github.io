@@ -18,15 +18,14 @@ and fixed 8-bit banding:
 
 ## 1. The 5-Mip Bloom Chain (13-Tap Blur)
 Instead of running one slow giant blur,<br/>
-shrink the bright pixels five times and blend them
-back up:
+shrink the bright pixels five times and blend them back up:
 
 * **Prefilter** pixels above a soft-knee threshold.
 * **Downsample** 5× with Jimenez’s 13-tap filter.
 * **Upsample** and blend each mip onto the frame.
 
 ```glsl
-// Soft knee (smooth transition) Prefilter 
+// Soft knee (smooth transition) Prefilter
 vec3 softThreshold(vec3 color, float threshold, float knee) {
   float br = max(color.r, max(color.g, color.b));
   float soft = clamp(br - threshold + knee, 0.0, 2.0 * knee);
@@ -37,9 +36,9 @@ vec3 softThreshold(vec3 color, float threshold, float knee) {
 ```
 
 ## 2. Bugs: BeginDrawing() & #version 330
-1. **Double `BeginDrawing()`:** <br/>
-Calling `EndDrawing()` inside `ApplyBloom()` and `main()`<br/>
-halved FPS and flickered UI text.
+1. **Double `BeginDrawing()`:**<br/>
+Calling `EndDrawing()` inside `ApplyBloom()`<br/>
+and `main()` halved FPS and flickered UI text.
 2. **Missing `#version 330`:**<br/>
 Omitting that header in the [GLSL](/tags/glsl/) fragment shader<br/>
 broke `compositeFS` uniform updates.
@@ -51,8 +50,7 @@ Faint glow tails snap into stairs,<br/>
 and strong bloom turns them into rings.
 
 Float16 `(R16G16B16A16)` packs tiny exponents near zero,<br/>
-keeping faint [HDR](/tags/hdr/)
-light silky smooth:
+keeping faint [HDR](/tags/hdr/) light silky smooth:
 
 <Float16Visualizer />
 

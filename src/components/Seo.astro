@@ -30,7 +30,6 @@ const {
   breadcrumbs = [],
 } = Astro.props;
 
-
 const clean = (s: string) => s.replace(/\s+/g, " ").trim();
 const cleanTitle = clean(title);
 const cleanDescription = clean(description);
@@ -68,7 +67,7 @@ if (ogType === "article" && pubDate) {
     "@type": "BlogPosting",
     mainEntityOfPage: { "@type": "WebPage", "@id": canonical },
     headline: cleanTitle,
-    cleanDescription,
+    description: cleanDescription,
     datePublished: pubDate.toISOString(),
     ...(updatedDate && { dateModified: updatedDate.toISOString() }),
     author: { "@id": `${siteUrl}/#author` },

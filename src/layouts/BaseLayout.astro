@@ -60,11 +60,11 @@ const {
           const isDark =
             savedTheme === "dark" ||
             (!savedTheme && window.matchMedia("(prefers-color-scheme: dark)").matches);
-            
-          const savedScale = localStorage.getItem("shlongeeland-scale");
+
+          const savedScale = localStorage.getItem("shlongeeland-scale-v2");
           if (savedScale) {
             document.documentElement.style.setProperty("--page-scale", savedScale);
-          }  
+          }
 
           document.documentElement.classList.toggle("dark", isDark);
           document.documentElement.classList.toggle(
@@ -112,6 +112,29 @@ const {
                 <slot />
               </div>
             </div>
+            <script is:inline>
+              (() => {
+                const frame = document.querySelector("[data-page-scale-frame]");
+                const content = document.querySelector("[data-page-scale-content]");
+                if (!frame || !content) return;
+                const raw = localStorage.getItem("shlongeeland-scale-v2");
+                const parsed = raw ? parseFloat(raw) : NaN;
+                const target = Number.isFinite(parsed)
+                  ? Math.min(2.0, Math.max(0.7, parsed))
+                  : 1.35;
+                const baseWidth = content.offsetWidth;
+                const availWidth = frame.clientWidth;
+                if (!baseWidth || !availWidth) return;
+                const scale = Math.min(target, availWidth / baseWidth);
+                const offsetX = Math.max(0, (availWidth - baseWidth * scale) / 2);
+                if (Math.abs(scale - 1) < 0.001) {
+                  if (offsetX >= 0.5) content.style.transform = `translateX(${offsetX}px)`;
+                } else {
+                  content.style.transform = `translateX(${offsetX}px) scale(${scale})`;
+                  frame.style.height = `${content.offsetHeight * scale}px`;
+                }
+              })();
+            </script>
           </main>
           <Footer />
         </div>
@@ -119,7 +142,7 @@ const {
         <div id="scale-popover" class="scale-popover" data-scale-popover hidden>
           <div class="scale-popover__head">
             <label for="page-scale-slider">Page Scale</label>
-            <strong data-scale-readout>1.50x</strong>
+            <strong data-scale-readout>1.35x</strong>
           </div>
           <input
             id="page-scale-slider"
@@ -127,7 +150,7 @@ const {
             min="0.7"
             max="2.0"
             step="0.05"
-            value="1.5"
+            value="1.35"
             data-scale-slider
           />
           <div class="scale-popover__foot">
@@ -142,15 +165,19 @@ const {
     )}
 
     <script>
-      import { mountSpaceWormhole } from "../scripts/space-wormhole";
-      import { mountCursorGlow } from "../scripts/cursor-glow";
       import { mountArcaneControls } from "../scripts/arcane-controls";
       import { mountPageScaler } from "../scripts/page-scaler";
+      import { mountCursorGlow } from "../scripts/cursor-glow";
 
       mountArcaneControls();
-      mountSpaceWormhole();
-      mountCursorGlow();
       mountPageScaler();
+      mountCursorGlow();
+    </script>
+
+    <script>
+      import { mountSpaceWormhole } from "../scripts/space-wormhole";
+
+      mountSpaceWormhole();
     </script>
   </body>
 </html>

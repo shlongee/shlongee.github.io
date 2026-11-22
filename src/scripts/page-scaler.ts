@@ -20,12 +20,12 @@ function attachScaler(): void {
 
     const targetScale = getStoredPageScale();
     const scale = Math.min(targetScale, availWidth / baseWidth);
+    const offsetX = Math.max(0, (availWidth - baseWidth * scale) / 2);
 
     if (Math.abs(scale - 1) < 0.001) {
-      content.style.transform = "";
+      content.style.transform = offsetX >= 0.5 ? `translateX(${offsetX}px)` : "";
       frame.style.height = "";
     } else {
-      const offsetX = Math.max(0, (availWidth - baseWidth * scale) / 2);
       content.style.transform = `translateX(${offsetX}px) scale(${scale})`;
       frame.style.height = `${content.offsetHeight * scale}px`;
     }

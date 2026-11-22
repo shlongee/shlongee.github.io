@@ -13,13 +13,13 @@ tags: ["astro", "webgl", "threejs", "glsl", "shaders"]
 import SeamVisualizer from '../../components/SeamVisualizer.astro';
 import ParticleBloomVisualizer from '../../components/ParticleBloomVisualizer.astro';
 
-This site pairs [Astro](/tags/astro/) static pages with [Three.js](/tags/threejs/) and
-[WebGL](/tags/webgl/) shaders. 
+This site pairs [Astro](/tags/astro/) static pages with [Three.js](/tags/threejs/) and [WebGL](/tags/webgl/) shaders.<br/>
 Here is how the pieces fit together:
 
 ## 1. Persistent Canvas via Astro ClientRouter
 Jumping from **Home** to **Blog** never resets the aurora.<br/>
-Astro’s `ClientRouter` swaps page content while.. `transition:persist` keeps the WebGL `<canvas>` running.
+Astro’s `ClientRouter` swaps page content while<br/>
+`transition:persist` keeps the WebGL `<canvas>` running.
 
 ## 2. Fixing the Polar atan() Seam in GLSL
 Raw `atan(y, x)` jumps sharply where `−π` wraps to `+π`.<br/>
@@ -31,9 +31,8 @@ into 3D noise with a gentle helical wobble heals the seam:
 ## 3. Instanced Three.js Title Particles
 To render **SHLONGEELAND** in particles,<br/>
 we draw the title to a 2D canvas,<br/>
- spawn quads with
-`InstancedBufferGeometry`,<br/>
- and shade each dot with a **core + halo** glow:
+spawn quads with `InstancedBufferGeometry`,<br/>
+and shade each dot with a **core + halo** glow:
 
 ```glsl
 float core = exp(-d * d * 6.5);
