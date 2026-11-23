@@ -1,0 +1,57 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import { DEFAULT_LANG, LANGUAGES, type Lang } from "../../../i18n/ui";
+import { getTagLabel, localePath, splitPostId, useTranslations } from "../../../i18n/utils";
+
+export function getStaticPaths() {
+  return LANGUAGES.map((lang) => ({
+    params: { locale: lang === DEFAULT_LANG ? undefined : lang },
+    props: { lang },
+  }));
+}
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+
+const posts = await getCollection(
+  "blog",
+  ({ id, data }) => !data.draft && splitPostId(id).lang === lang,
+);
+
+const counts = new Map<string, number>();
+for (const post of posts) {
+  for (const tag of post.data.tags) {
+    counts.set(tag, (counts.get(tag) ?? 0) + 1);
+  }
+}
+const tags = Array.from(counts.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+
+const breadcrumbs = [
+  { name: t("nav.home"), path: localePath(lang, "/") },
+  { name: t("nav.tags"), path: localePath(lang, "/tags/") },
+];
+---
+
+<BaseLayout
+  title={t("tags.seoTitle")}
+  description={t("tags.seoDesc")}
+  lang={lang}
+  breadcrumbs={breadcrumbs}
+>
+  <h1>{t("tags.heading")}</h1>
+  <p class="page-lede">{t("tags.lede")}</p>
+  <ul class="tag-grid">
+    {tags.map(([tag, count]) => (
+      <li>
+        <a class="tag-pill" href={localePath(lang, `/tags/${encodeURIComponent(tag)}/`)}>
+          #{getTagLabel(lang, tag)} <span>({count})</span>
+        </a>
+      </li>
+    ))}
+  </ul>
+</BaseLayout>

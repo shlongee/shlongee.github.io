@@ -1,0 +1,45 @@
+---
+import { LANGUAGE_META, LANGUAGES, type Lang } from "../i18n/ui";
+import { getLocalePaths, resolveLang, useTranslations } from "../i18n/utils";
+
+interface Props {
+  lang?: Lang;
+  localePaths?: Partial<Record<Lang, string>>;
+}
+
+const {
+  lang = resolveLang(Astro.currentLocale),
+  localePaths,
+} = Astro.props;
+
+const t = useTranslations(lang);
+const paths = getLocalePaths(Astro.url.pathname, localePaths);
+---
+
+<div
+  id="lang-popover"
+  class="lang-popover"
+  data-lang-popover
+  role="menu"
+  aria-label={t("controls.langMenuAria")}
+  hidden
+>
+  {LANGUAGES.map((itemLang) => {
+    const meta = LANGUAGE_META[itemLang];
+    const isActive = itemLang === lang;
+    return (
+      <a
+        href={paths[itemLang]}
+        class:list={["lang-option", { "is-active": isActive }]}
+        role="menuitemradio"
+        aria-checked={isActive}
+        hreflang={itemLang}
+        data-lang-option={itemLang}
+      >
+        <span class="lang-option__code">{meta.code}</span>
+        <span class="lang-option__name">{meta.nativeName}</span>
+        {isActive && <span class="lang-option__mark" aria-hidden="true">✦</span>}
+      </a>
+    );
+  })}
+</div>

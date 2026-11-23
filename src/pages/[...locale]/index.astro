@@ -1,0 +1,55 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { DEFAULT_LANG, LANGUAGES, type Lang } from "../../i18n/ui";
+import { localePath, useTranslations } from "../../i18n/utils";
+
+export function getStaticPaths() {
+  return LANGUAGES.map((lang) => ({
+    params: { locale: lang === DEFAULT_LANG ? undefined : lang },
+    props: { lang },
+  }));
+}
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+---
+
+<BaseLayout
+  title={t("home.seoTitle")}
+  description={t("home.seoDesc")}
+  lang={lang}
+  rawTitle
+  immersive
+>
+  <section class="wormhole-home" aria-label="Shlongeeland">
+    <div class="title-particles" aria-hidden="true">
+      <canvas data-title-particles data-title="SHLONGEELAND"></canvas>
+    </div>
+
+    <h1 class="title-particles__fallback" data-title-fallback data-title="SHLONGEELAND">
+      SHLONGEELAND
+    </h1>
+
+    <p class="sr-only">
+      {t("home.srDesc")}
+    </p>
+
+    <nav class="wormhole-home__nav" aria-label={t("nav.aria")}>
+      <a class="wormhole-nav__btn" data-warp-link href={localePath(lang, "/blog/")}>{t("nav.blog")}</a>
+      <a class="wormhole-nav__btn" data-warp-link href={localePath(lang, "/tags/")}>{t("nav.tags")}</a>
+      <a class="wormhole-nav__btn" data-warp-link href={localePath(lang, "/about/")}>{t("nav.about")}</a>
+    </nav>
+
+    <footer class="home-micro-footer">
+      <a href="https://github.com/shlongee" rel="me noopener noreferrer" target="_blank">GitHub</a>
+      <span aria-hidden="true">·</span>
+      <a href={localePath(lang, "/rss.xml")}>RSS</a>
+    </footer>
+  </section>
+</BaseLayout>
+
+<script src="../../scripts/title-particles.ts"></script>

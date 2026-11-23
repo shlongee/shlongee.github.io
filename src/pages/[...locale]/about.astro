@@ -1,0 +1,142 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { DEFAULT_LANG, LANGUAGES, type Lang } from "../../i18n/ui";
+import { localePath, useTranslations } from "../../i18n/utils";
+
+export function getStaticPaths() {
+  return LANGUAGES.map((lang) => ({
+    params: { locale: lang === DEFAULT_LANG ? undefined : lang },
+    props: { lang },
+  }));
+}
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+
+const breadcrumbs = [
+  { name: t("nav.home"), path: localePath(lang, "/") },
+  { name: t("nav.about"), path: localePath(lang, "/about/") },
+];
+---
+
+<BaseLayout
+  title={t("about.seoTitle")}
+  description={t("about.seoDesc")}
+  lang={lang}
+  breadcrumbs={breadcrumbs}
+>
+  {lang === "ru" ? (
+    <>
+      <div class="about-centered">
+        <h1>Про Shlongee и Shlongeeland</h1>
+        <p class="page-lede">
+          Добро пожаловать в Shlongeeland!<br />Уютный гримуар по графике и креативному коду :3
+        </p>
+
+        <p>
+          Я — <strong>Shlongee</strong>, и в этом девлоге я создаю:<br />
+          шейдеры <a href="/ru/tags/glsl/">GLSL</a>, игры на <a href="/ru/tags/raylib/">Raylib</a>, веб-сцены на <a href="/ru/tags/threejs/">Three.js</a> ...<br />
+        </p>
+
+        <p class="shader-mantra-line">
+          <span class="shader-mantra">
+            <span class="mantra-text">Каждый баг — лишь заклинание, что нужно разгадать!</span>
+            <span class="mantra-star mantra-star--1" aria-hidden="true">✦</span>
+            <span class="mantra-star mantra-star--2" aria-hidden="true">✧</span>
+            <span class="mantra-star mantra-star--3" aria-hidden="true">⋆</span>
+            <span class="mantra-star mantra-star--4" aria-hidden="true">✦</span>
+            <span class="mantra-star mantra-star--5" aria-hidden="true">✧</span>
+            <span class="mantra-star mantra-star--6" aria-hidden="true">⋆</span>
+          </span>
+        </p>
+        
+      </div>
+
+      <h2>Вас ждёт:</h2>
+      <p>
+        Живая визуализация кода, Замеры производительности <br />
+        и Чистые примеры шейдеров по трём темам:
+      </p>
+      <ul>
+        <li>
+          <strong>Рендеринг в реальном времени и HDR:</strong><br />
+          Многоуровневый bloom, мягкий порог (soft-knee)<br />
+          и точность FP16 в <a href="/ru/tags/raylib/">Raylib</a> и <a href="/ru/tags/hdr/">HDR</a>.
+        </li>
+        <li>
+          <strong>WebGL и шейдеры:</strong><br />
+          Туннели на кастомном RawShaderMaterial, бесшовный шум,<br />
+          текст из частиц и 3D-меши в <a href="/ru/tags/threejs/">Three.js</a>.
+        </li>
+        <li>
+          <strong>Инженерия на Astro:</strong><br />
+          Непрерывный WebGL-холст с <a href="/ru/tags/astro/">Astro</a> ClientRouter,<br />
+          виджеты на MDX и мгновенный поиск на Preact.
+        </li>
+      </ul>
+
+      <p>
+        Читайте <a href="/ru/blog/">девлог</a>, исследуйте <a href="/ru/tags/">теги</a> или подпишитесь по <a href="/ru/rss.xml">RSS</a> !
+      </p>
+    </>
+  ) : (
+    <>
+      <div class="about-centered">
+        <h1>About Shlongee &amp; Shlongeeland</h1>
+        <p class="page-lede">
+          Welcome to Shlongeeland!<br />A cozy technical spellbook for graphics and creative code :3
+        </p>
+
+        <p>
+          I am <strong>Shlongee</strong>, and this devlog records the magic I learn:<br />
+          <a href="/tags/glsl/">GLSL</a> shaders, <a href="/tags/raylib/">Raylib</a> games, <a href="/tags/threejs/">Three.js</a> interactive web scenes...
+        </p>
+
+        <p class="shader-mantra-line">
+          <span class="shader-mantra">
+            <span class="mantra-text">Tame the shader before it eats your frame! :p</span>
+            <span class="mantra-star mantra-star--1" aria-hidden="true">✦</span>
+            <span class="mantra-star mantra-star--2" aria-hidden="true">✧</span>
+            <span class="mantra-star mantra-star--3" aria-hidden="true">⋆</span>
+            <span class="mantra-star mantra-star--4" aria-hidden="true">✦</span>
+            <span class="mantra-star mantra-star--5" aria-hidden="true">✧</span>
+            <span class="mantra-star mantra-star--6" aria-hidden="true">⋆</span>
+          </span>
+        </p>
+
+      </div>
+
+      <h2>What You Will Find Here</h2>
+      <p>
+        Each report pairs interactive visualizers with profiled timings<br />and clean shader code across
+        three topics:
+      </p>
+      <ul>
+        <li>
+          <strong>Real-Time Rendering &amp; HDR:</strong><br />
+          Multi-mip bloom, soft-knee thresholds,<br />
+          and FP16 precision in <a href="/tags/raylib/">Raylib</a> and <a href="/tags/hdr/">HDR</a>.
+        </li>
+        <li>
+          <strong>WebGL &amp; Shaders:</strong><br />
+          Custom RawShaderMaterial tunnels, seamless noise,<br />
+          particle text, and 3D meshes in <a href="/tags/threejs/">Three.js</a>.
+        </li>
+        <li>
+          <strong>Astro Engineering:</strong><br />
+          Persistent WebGL canvases with <a href="/tags/astro/">Astro</a> ClientRouter,<br />
+          MDX widgets, and Preact search.
+        </li>
+      </ul>
+
+      <p>
+        Read the <a href="/blog/">devlog</a>, explore <a href="/tags/glsl/">GLSL</a>,
+        browse <a href="/tags/">tags</a>, or follow via <a href="/rss.xml">RSS</a>.
+      </p>
+    </>
+  )}
+</BaseLayout>

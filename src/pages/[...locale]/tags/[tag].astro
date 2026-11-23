@@ -1,0 +1,123 @@
+---
+import { getCollection, type CollectionEntry } from "astro:content";
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import { DEFAULT_LANG, LANGUAGES, type Lang } from "../../../i18n/ui";
+import {
+  formatDate,
+  getTagDescription,
+  getTagLabel,
+  localePath,
+  splitPostId,
+  useTranslations,
+} from "../../../i18n/utils";
+
+export async function getStaticPaths() {
+  const allPosts = await getCollection("blog", ({ data }) => !data.draft);
+
+  const postsByLang = Object.fromEntries(
+    LANGUAGES.map((lang) => [lang, [] as CollectionEntry<"blog">[]]),
+  ) as Record<Lang, CollectionEntry<"blog">[]>;
+
+  const tagsByLang = Object.fromEntries(
+    LANGUAGES.map((lang) => [lang, new Set<string>()]),
+  ) as Record<Lang, Set<string>>;
+
+  for (const post of allPosts) {
+    const { lang } = splitPostId(post.id);
+    postsByLang[lang].push(post);
+    for (const tag of post.data.tags) {
+      tagsByLang[lang].add(tag);
+    }
+  }
+
+  const paths = [];
+
+  for (const lang of LANGUAGES) {
+    const langPosts = postsByLang[lang].sort(
+      (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+    );
+
+    for (const tag of tagsByLang[lang]) {
+      const localePaths = {} as Record<Lang, string>;
+      const alternateLocales: Lang[] = [];
+
+      for (const targetLang of LANGUAGES) {
+        const hasTag = tagsByLang[targetLang].has(tag);
+        localePaths[targetLang] = hasTag
+          ? localePath(targetLang, `/tags/${encodeURIComponent(tag)}/`)
+          : localePath(targetLang, "/tags/");
+        if (hasTag) alternateLocales.push(targetLang);
+      }
+
+      paths.push({
+        params: {
+          locale: lang === DEFAULT_LANG ? undefined : lang,
+          tag,
+        },
+        props: {
+          lang,
+          tag,
+          posts: langPosts.filter((p) => p.data.tags.includes(tag)),
+          localePaths,
+          alternateLocales,
+        },
+      });
+    }
+  }
+
+  return paths;
+}
+
+interface Props {
+  lang: Lang;
+  tag: string;
+  posts: CollectionEntry<"blog">[];
+  localePaths: Partial<Record<Lang, string>>;
+  alternateLocales: Lang[];
+}
+
+const { lang, tag, posts, localePaths, alternateLocales } = Astro.props;
+const t = useTranslations(lang);
+const tagLabel = getTagLabel(lang, tag);
+const tagDescription = getTagDescription(lang, tag);
+
+const pageTitle =
+  lang === "ru"
+    ? `#${tagLabel} — ${t("tags.detailTitleSuffix")}`
+    : `#${tagLabel} ${t("tags.detailTitleSuffix")}`;
+
+const breadcrumbs = [
+  { name: t("nav.home"), path: localePath(lang, "/") },
+  { name: t("nav.tags"), path: localePath(lang, "/tags/") },
+  { name: `#${tagLabel}`, path: localePath(lang, `/tags/${encodeURIComponent(tag)}/`) },
+];
+---
+
+<BaseLayout
+  title={pageTitle}
+  description={tagDescription}
+  lang={lang}
+  localePaths={localePaths}
+  alternateLocales={alternateLocales}
+  breadcrumbs={breadcrumbs}
+>
+  <p><a href={localePath(lang, "/tags/")}>{t("tags.allTags")}</a></p>
+  <h1>#{tagLabel}</h1>
+  <p class="page-lede">{tagDescription}</p>
+  <ul class="post-list">
+    {posts.map((post) => {
+      const { slug } = splitPostId(post.id);
+      return (
+        <li class="post-card">
+          <a class="post-card__link" href={localePath(lang, `/blog/${slug}/`)}>
+            <time datetime={post.data.pubDate.toISOString()}>
+              {formatDate(post.data.pubDate, lang)}
+            </time>
+            <h2>{post.data.title}</h2>
+            <p>{post.data.description}</p>
+          </a>
+        </li>
+      );
+    })}
+  </ul>
+</BaseLayout>

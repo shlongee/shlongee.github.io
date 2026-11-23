@@ -1,16 +1,34 @@
+---
+import type { Lang } from "../i18n/ui";
+import { resolveLang } from "../i18n/utils";
+
+interface Props {
+  lang?: Lang;
+}
+
+const lang = Astro.props.lang ?? resolveLang(Astro.currentLocale);
+const isRu = lang === "ru";
+
+const coreLabel = isRu ? "Резкость ядра:" : "Core Sharpness:";
+const haloLabel = isRu ? "Свечение ореола:" : "Halo Glow:";
+const note = isRu
+  ? "Сочетание плотного ядра с экспоненциальным ореолом сохраняет читаемость букв и мягкое свечение!"
+  : "Combining a tight core with an exponential halo keeps letters readable while glowing softly!";
+---
+
 <div class="arcane-viz bloom-viz">
   <div class="arcane-viz__controls">
     <label>
-      Core Sharpness: <strong class="val-core">6.5</strong>
+      {coreLabel} <strong class="val-core">6.5</strong>
       <input type="range" class="slider-core" min="2" max="16" step="0.5" value="6.5" />
     </label>
     <label>
-      Halo Glow: <strong class="val-halo">0.58</strong>
+      {haloLabel} <strong class="val-halo">0.58</strong>
       <input type="range" class="slider-halo" min="0" max="1" step="0.02" value="0.58" />
     </label>
   </div>
   <canvas class="arcane-viz__canvas bloom-canvas" width="520" height="140"></canvas>
-  <p class="arcane-viz__note">Combining a tight core with an exponential halo keeps letters readable while glowing softly!</p>
+  <p class="arcane-viz__note">{note}</p>
 </div>
 
 <script>

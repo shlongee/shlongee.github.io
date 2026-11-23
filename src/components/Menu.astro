@@ -1,3 +1,15 @@
+---
+import type { Lang } from "../i18n/ui";
+import { resolveLang, useTranslations } from "../i18n/utils";
+
+interface Props {
+  lang?: Lang;
+}
+
+const lang = Astro.props.lang ?? resolveLang(Astro.currentLocale);
+const t = useTranslations(lang);
+---
+
 <button aria-expanded="false" aria-controls="main-menu" class="menu" data-menu-toggle type="button">
-  Menu
+  {t("nav.menu")}
 </button>

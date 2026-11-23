@@ -1,7 +1,15 @@
 import type { APIContext } from "astro";
 import { getCollection } from "astro:content";
+import { DEFAULT_LANG, LANGUAGES } from "../../i18n/ui";
+import { resolveLang, splitPostId } from "../../i18n/utils";
 
 export const prerender = true;
+
+export function getStaticPaths() {
+  return LANGUAGES.map((lang) => ({
+    params: { locale: lang === DEFAULT_LANG ? undefined : lang },
+  }));
+}
 
 function stripMarkdown(raw: string): string {
   return raw
@@ -13,12 +21,17 @@ function stripMarkdown(raw: string): string {
     .trim();
 }
 
-export async function GET(_context: APIContext) {
-  const posts = await getCollection("blog", ({ data }) => !data.draft);
+export async function GET(context: APIContext) {
+  const lang = resolveLang(context.params.locale);
+  const posts = await getCollection(
+    "blog",
+    ({ id, data }) => !data.draft && splitPostId(id).lang === lang,
+  );
+
   const index = posts
     .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
     .map((post) => ({
-      id: post.id,
+      id: splitPostId(post.id).slug,
       title: post.data.title,
       description: post.data.description,
       pubDate: post.data.pubDate.toISOString(),

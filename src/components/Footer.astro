@@ -1,11 +1,20 @@
 ---
+import type { Lang } from "../i18n/ui";
+import { localePath, resolveLang } from "../i18n/utils";
+
+interface Props {
+  lang?: Lang;
+}
+
+const lang = Astro.props.lang ?? resolveLang(Astro.currentLocale);
 const platform = "github";
 const username = "shlongee";
+const rssHref = localePath(lang, "/rss.xml");
 ---
 <footer class="site-footer">
   <p>
     Shlongeeland ·
     <a href={`https://www.${platform}.com/${username}`} target="_blank" rel="noopener noreferrer">GitHub</a> ·
-    <a href="/rss.xml">RSS</a>
+    <a href={rssHref}>RSS</a>
   </p>
 </footer>

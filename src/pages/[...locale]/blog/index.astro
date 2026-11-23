@@ -1,0 +1,56 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import BlogSearch from "../../../components/BlogSearch";
+import { DEFAULT_LANG, LANGUAGES, type Lang } from "../../../i18n/ui";
+import { localePath, splitPostId, useTranslations } from "../../../i18n/utils";
+
+export function getStaticPaths() {
+  return LANGUAGES.map((lang) => ({
+    params: { locale: lang === DEFAULT_LANG ? undefined : lang },
+    props: { lang },
+  }));
+}
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+
+const posts = (
+  await getCollection(
+    "blog",
+    ({ id, data }) => !data.draft && splitPostId(id).lang === lang,
+  )
+).sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+const initialPosts = posts.map((post) => ({
+  id: splitPostId(post.id).slug,
+  title: post.data.title,
+  description: post.data.description,
+  pubDate: post.data.pubDate.toISOString(),
+  tags: post.data.tags,
+}));
+
+const allTags = Array.from(
+  new Set(posts.flatMap((post) => post.data.tags)),
+).sort((a, b) => a.localeCompare(b));
+
+const breadcrumbs = [
+  { name: t("nav.home"), path: localePath(lang, "/") },
+  { name: t("nav.blog"), path: localePath(lang, "/blog/") },
+];
+---
+
+<BaseLayout
+  title={t("blog.seoTitle")}
+  description={t("blog.seoDesc")}
+  lang={lang}
+  breadcrumbs={breadcrumbs}
+>
+  <h1>{t("blog.heading")}</h1>
+  <p class="page-lede">{t("blog.lede")}</p>
+  <BlogSearch client:load initialPosts={initialPosts} allTags={allTags} lang={lang} />
+</BaseLayout>

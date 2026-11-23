@@ -1,9 +1,21 @@
+---
+import type { Lang } from "../i18n/ui";
+import { resolveLang, useTranslations } from "../i18n/utils";
+
+interface Props {
+  lang?: Lang;
+}
+
+const lang = Astro.props.lang ?? resolveLang(Astro.currentLocale);
+const t = useTranslations(lang);
+---
+
 <button
   type="button"
   class="arcane-btn arcane-btn--theme"
   data-theme-toggle
-  aria-label="Toggle astral / vellum theme"
-  title="Toggle theme"
+  aria-label={t("controls.themeAria")}
+  title={t("controls.themeTitle")}
 >
   <svg class="arcane-sigil" viewBox="0 0 32 32" width="22" height="22" aria-hidden="true">
     <circle class="sigil-ring" cx="16" cy="16" r="13" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="3 2.5" />

@@ -6,7 +6,26 @@ import { defineConfig, fontProviders } from "astro/config";
 
 export default defineConfig({
   site: "https://shlongee.github.io",
-  integrations: [mdx(), sitemap(), preact()],
+  i18n: {
+    locales: ["en", "ru"],
+    defaultLocale: "en",
+    routing: {
+      prefixDefaultLocale: false,
+    },
+  },
+  integrations: [
+    mdx(),
+    preact(),
+    sitemap({
+      i18n: {
+        defaultLocale: "en",
+        locales: {
+          en: "en",
+          ru: "ru",
+        },
+      },
+    }),
+  ],
   markdown: {
     shikiConfig: {
       themes: {
@@ -33,10 +52,25 @@ export default defineConfig({
       provider: fontProviders.local(),
       name: "Kejter",
       cssVariable: "--kejter",
-      fallbacks: ["Georgia", "serif"],
+      fallbacks: [],
       options: {
         variants: [
-          { src: ["./src/assets/fonts/kejter.woff2"], weight: 400, style: "normal", display: "swap" },
+          { src: ["./src/assets/fonts/Kejter-latin.woff2"], weight: 400, style: "normal", display: "swap" },
+        ],
+      },
+    },
+    {
+      provider: fontProviders.local(),
+      name: "AmaticSC",
+      cssVariable: "--amatic-sc",
+      options: {
+        variants: [
+          {
+            src: ["./src/assets/fonts/AmaticSC-cyrillic.woff2"],
+            weight: "400",
+            style: "normal",
+            unicodeRange: ["U+0400-04FF", "U+2116"],
+          },
         ],
       },
     },
@@ -53,7 +87,7 @@ export default defineConfig({
           { src: ["./src/assets/fonts/morningbreeze-bold.woff2"], weight: 700, style: "normal", display: "swap" },
         ],
       },
-    },
+    }
   ],
   vite: {
     build: {

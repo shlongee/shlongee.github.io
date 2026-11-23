@@ -1,0 +1,56 @@
+---
+title: |-
+  Непрерывные шейдеры WebGL
+  и текст из частиц в Astro
+description: |-
+  Как сохранить живой Three.js-холст между страницами Astro,
+  убрать шов atan() в GLSL
+  и отрисовать заголовок из частиц.
+pubDate: 2026-11-21
+tags: ["astro", "webgl", "threejs", "glsl", "shaders"]
+---
+
+import SeamVisualizer from '../../../components/SeamVisualizer.astro';
+import ParticleBloomVisualizer from '../../../components/ParticleBloomVisualizer.astro';
+
+Этот сайт объединяет статические страницы [Astro](/ru/tags/astro/) с шейдерами [Three.js](/ru/tags/threejs/) и [WebGL](/ru/tags/webgl/).<br/>
+Вот как устроена его магия внутри:
+
+## 1. Живой холст через Astro ClientRouter
+При переходе с **Главной** в **Блог** полярное сияние не сбрасывается.<br/>
+`ClientRouter` в Astro подменяет содержимое страницы, пока<br/>
+`transition:persist` не даёт WebGL-элементу `<canvas>` остановиться.
+
+## 2. Лечим полярный шов atan() в GLSL
+Сырой `atan(y, x)` делает резкий скачок там, где `−π` переходит в `+π`.<br/>
+Передача замкнутых координат окружности `(cosθ, sinθ, depth)`<br/>
+в 3D-шум с лёгкой спиральной пульсацией полностью убирает шов:
+
+<SeamVisualizer lang="ru" />
+
+## 3. Инстансинг частиц заголовка на Three.js
+Чтобы нарисовать **SHLONGEELAND** живыми частицами,<br/>
+мы рендерим текст в 2D-canvas,<br/>
+создаём квады через `InstancedBufferGeometry`<br/>
+и раскрашиваем каждую точку формулой **ядро + ореол**:
+
+```glsl
+float core = exp(-d * d * 6.5);
+float halo = exp(-d * 2.4) * 0.58;
+```
+
+<ParticleBloomVisualizer lang="ru" />
+
+## 4. 3D-грибы и статический поиск на Preact
+* **3D-грибы:**<br/>
+Выточены через `LatheGeometry` с подсветкой краёв по Френелю,<br/>
+парят среди звёзд и откликаются на клик через `Raycaster`.
+* **Мгновенный поиск:**<br/>
+Сгенерированный при сборке `/ru/search-index.json` фильтрует записи<br/>
+по тегам и словам прямо в **Preact** без всякого бэкенда.
+
+## Связанные заклинания
+* Узнайте, как мягкий HDR-bloom избавляется от цветных полос:<br/>
+[HDR Bloom в Raylib: убираем бандинг с Float16](/ru/blog/01-hdr-bloom-report/).
+* Больше заметок в<br/>
+[#шейдеры](/ru/tags/shaders/) и [#threejs](/ru/tags/threejs/).

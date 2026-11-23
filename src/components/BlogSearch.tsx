@@ -1,4 +1,12 @@
 import { useEffect, useMemo, useState } from "preact/hooks";
+import type { Lang } from "../i18n/ui";
+import {
+  formatDate,
+  formatNotesCount,
+  getTagLabel,
+  localePath,
+  useTranslations,
+} from "../i18n/utils";
 
 export interface SearchablePost {
   id: string;
@@ -12,9 +20,11 @@ export interface SearchablePost {
 interface Props {
   initialPosts: SearchablePost[];
   allTags: string[];
+  lang: Lang;
 }
 
-export default function BlogSearch({ initialPosts, allTags }: Props) {
+export default function BlogSearch({ initialPosts, allTags, lang }: Props) {
+  const t = useTranslations(lang);
   const [query, setQuery] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [posts, setPosts] = useState<SearchablePost[]>(initialPosts);
@@ -23,7 +33,7 @@ export default function BlogSearch({ initialPosts, allTags }: Props) {
   const loadFullIndex = () => {
     if (indexLoaded) return;
     setIndexLoaded(true);
-    fetch("/search-index.json")
+    fetch(localePath(lang, "/search-index.json"))
       .then((res) => (res.ok ? res.json() : null))
       .then((data: SearchablePost[] | null) => {
         if (data) setPosts(data);
@@ -44,7 +54,7 @@ export default function BlogSearch({ initialPosts, allTags }: Props) {
 
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) =>
-      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag],
+      prev.includes(tag) ? prev.filter((item) => item !== tag) : [...prev, tag],
     );
   };
 
@@ -53,24 +63,27 @@ export default function BlogSearch({ initialPosts, allTags }: Props) {
     return posts.filter((post) => {
       const matchesTags =
         selectedTags.length === 0 ||
-        selectedTags.every((t) => post.tags.includes(t));
+        selectedTags.every((tag) => post.tags.includes(tag));
       if (!matchesTags) return false;
 
       if (terms.length === 0) return true;
-      const haystack = `${post.title} ${post.description} ${post.tags.join(" ")} ${post.body ?? ""}`.toLowerCase();
+      const tagWords = post.tags
+        .map((tag) => `${tag} ${getTagLabel(lang, tag)}`)
+        .join(" ");
+      const haystack = `${post.title} ${post.description} ${tagWords} ${post.body ?? ""}`.toLowerCase();
       return terms.every((term) => haystack.includes(term));
     });
-  }, [posts, query, selectedTags]);
+  }, [posts, query, selectedTags, lang]);
 
   return (
     <section class="blog-search">
       <div class="search-controls">
-        <label class="sr-only" for="blog-search-input">Search posts by word or tag</label>
+        <label class="sr-only" for="blog-search-input">{t("search.label")}</label>
         <input
           id="blog-search-input"
           type="search"
           class="search-input"
-          placeholder="Search words or tags (bloom, raylib, float16)..."
+          placeholder={t("search.placeholder")}
           value={query}
           onFocus={loadFullIndex}
           onInput={(e) => {
@@ -87,13 +100,13 @@ export default function BlogSearch({ initialPosts, allTags }: Props) {
               setSelectedTags([]);
             }}
           >
-            Clear
+            {t("search.clear")}
           </button>
         )}
       </div>
 
       {allTags.length > 0 && (
-        <div class="tag-filter-row" role="group" aria-label="Filter by tag">
+        <div class="tag-filter-row" role="group" aria-label={t("search.filterAria")}>
           {allTags.map((tag) => {
             const active = selectedTags.includes(tag);
             return (
@@ -104,7 +117,7 @@ export default function BlogSearch({ initialPosts, allTags }: Props) {
                 class={`tag-pill ${active ? "is-active" : ""}`}
                 onClick={() => toggleTag(tag)}
               >
-                #{tag}
+                #{getTagLabel(lang, tag)}
               </button>
             );
           })}
@@ -112,19 +125,15 @@ export default function BlogSearch({ initialPosts, allTags }: Props) {
       )}
 
       <p class="search-count" role="status">
-        Showing {filtered.length} {filtered.length === 1 ? "note" : "notes"} found
+        {formatNotesCount(filtered.length, lang)}
       </p>
 
       <ul class="post-list">
         {filtered.map((post) => (
           <li key={post.id} class="post-card">
-            <a class="post-card__link" href={`/blog/${post.id}/`}>
+            <a class="post-card__link" href={localePath(lang, `/blog/${post.id}/`)}>
               <time datetime={post.pubDate}>
-                {new Date(post.pubDate).toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "short",
-                  day: "numeric",
-                })}
+                {formatDate(post.pubDate, lang)}
               </time>
               <h2>{post.title}</h2>
               <p>{post.description}</p>
@@ -133,7 +142,12 @@ export default function BlogSearch({ initialPosts, allTags }: Props) {
               <ul class="tag-list">
                 {post.tags.map((tag) => (
                   <li key={tag}>
-                    <a class="tag-pill" href={`/tags/${encodeURIComponent(tag)}/`}>#{tag}</a>
+                    <a
+                      class="tag-pill"
+                      href={localePath(lang, `/tags/${encodeURIComponent(tag)}/`)}
+                    >
+                      #{getTagLabel(lang, tag)}
+                    </a>
                   </li>
                 ))}
               </ul>

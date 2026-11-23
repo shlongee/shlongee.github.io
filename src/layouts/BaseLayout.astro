@@ -6,10 +6,16 @@ import Seo, { type BreadcrumbItem } from "../components/Seo.astro";
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
 import ArcaneControls from "../components/ArcaneControls.astro";
+import LanguageMenu from "../components/LanguageMenu.astro";
+import { DEFAULT_LANG, LANG_STORAGE_KEY, LANGUAGES, type Lang } from "../i18n/ui";
+import { resolveLang, useTranslations } from "../i18n/utils";
 
 export interface Props {
   title: string;
   description: string;
+  lang?: Lang;
+  alternateLocales?: Lang[];
+  localePaths?: Partial<Record<Lang, string>>;
   immersive?: boolean;
   ogType?: "website" | "article";
   pubDate?: Date;
@@ -23,6 +29,9 @@ export interface Props {
 const {
   title,
   description,
+  lang = resolveLang(Astro.currentLocale),
+  alternateLocales = [...LANGUAGES],
+  localePaths,
   immersive = false,
   ogType = "website",
   pubDate,
@@ -32,18 +41,26 @@ const {
   ogImage,
   breadcrumbs = [],
 } = Astro.props;
+
+const t = useTranslations(lang);
+const supportedLocales = [...LANGUAGES];
+const nonDefaultLocales = LANGUAGES.filter((l) => l !== DEFAULT_LANG);
 ---
 
 <!doctype html>
-<html lang="en" class:list={{ immersive }}>
+<html lang={lang} class:list={{ immersive }}>
   <head>
     <meta charset="UTF-8" />
     <Font cssVariable="--kejter" preload />
+    <Font cssVariable="--amatic-sc" />
     <Font cssVariable="--morning-breeze" preload={[{ weight: 400, style: "normal" }]} />
     <Font cssVariable="--jetbrains-mono" />
     <Seo
       title={title}
       description={description}
+      lang={lang}
+      alternateLocales={alternateLocales}
+      localePaths={localePaths}
       ogType={ogType}
       pubDate={pubDate}
       updatedDate={updatedDate}
@@ -53,24 +70,75 @@ const {
       breadcrumbs={breadcrumbs}
     />
     <ClientRouter />
-    <script is:inline>
+    <script
+      is:inline
+      define:vars={{
+        supportedLocales,
+        nonDefaultLocales,
+        defaultLang: DEFAULT_LANG,
+        langStorageKey: LANG_STORAGE_KEY,
+      }}
+    >
       (() => {
+        try {
+          const path = window.location.pathname;
+          const currentFromPath = nonDefaultLocales.find(
+            (code) => path === `/${code}` || path.startsWith(`/${code}/`),
+          );
+
+          if (!currentFromPath) {
+            let savedLang = null;
+            try {
+              savedLang = localStorage.getItem(langStorageKey);
+            } catch {}
+
+            if (savedLang !== defaultLang) {
+              const langs =
+                navigator.languages && navigator.languages.length
+                  ? navigator.languages
+                  : [navigator.language || ""];
+              const preferred = langs
+                .map((l) => l.toLowerCase().split("-")[0])
+                .find((code) => supportedLocales.includes(code));
+
+              const targetLang =
+                savedLang && nonDefaultLocales.includes(savedLang)
+                  ? savedLang
+                  : !savedLang && preferred && nonDefaultLocales.includes(preferred)
+                    ? preferred
+                    : null;
+
+              if (targetLang) {
+                const target = path === "/" ? `/${targetLang}/` : `/${targetLang}${path}`;
+                window.location.replace(
+                  target + window.location.search + window.location.hash,
+                );
+                return;
+              }
+            }
+          }
+        } catch {}
+
         const apply = () => {
-          const savedTheme = localStorage.getItem("theme");
+          let savedTheme = null;
+          let savedScale = null;
+          let isCrystal = false;
+          try {
+            savedTheme = localStorage.getItem("theme");
+            savedScale = localStorage.getItem("shlongeeland-scale-v2");
+            isCrystal = localStorage.getItem("shlongeeland-crystal") === "true";
+          } catch {}
+
           const isDark =
             savedTheme === "dark" ||
             (!savedTheme && window.matchMedia("(prefers-color-scheme: dark)").matches);
 
-          const savedScale = localStorage.getItem("shlongeeland-scale-v2");
           if (savedScale) {
             document.documentElement.style.setProperty("--page-scale", savedScale);
           }
 
           document.documentElement.classList.toggle("dark", isDark);
-          document.documentElement.classList.toggle(
-            "crystal",
-            localStorage.getItem("shlongeeland-crystal") === "true",
-          );
+          document.documentElement.classList.toggle("crystal", isCrystal);
         };
         apply();
         document.addEventListener("astro:after-swap", apply);
@@ -94,9 +162,10 @@ const {
         transition:animate={fade({ duration: "0.45s" })}
       >
         <div class="home-arcane-dock">
-          <ArcaneControls showCrystal={false} />
+          <ArcaneControls showCrystal={false} lang={lang} />
         </div>
         <slot />
+        <LanguageMenu lang={lang} localePaths={localePaths} />
       </main>
     ) : (
       <div
@@ -105,7 +174,7 @@ const {
         transition:animate={fade({ duration: "0.45s" })}
       >
         <div class="codex-sheet">
-          <Header />
+          <Header lang={lang} />
           <main class="site-main">
             <div class="page-scale-frame" data-page-scale-frame>
               <div class="page-scale-content" data-page-scale-content>
@@ -117,7 +186,10 @@ const {
                 const frame = document.querySelector("[data-page-scale-frame]");
                 const content = document.querySelector("[data-page-scale-content]");
                 if (!frame || !content) return;
-                const raw = localStorage.getItem("shlongeeland-scale-v2");
+                let raw = null;
+                try {
+                  raw = localStorage.getItem("shlongeeland-scale-v2");
+                } catch {}
                 const parsed = raw ? parseFloat(raw) : NaN;
                 const target = Number.isFinite(parsed)
                   ? Math.min(2.0, Math.max(0.7, parsed))
@@ -136,12 +208,14 @@ const {
               })();
             </script>
           </main>
-          <Footer />
+          <Footer lang={lang} />
         </div>
+
+        <LanguageMenu lang={lang} localePaths={localePaths} />
 
         <div id="scale-popover" class="scale-popover" data-scale-popover hidden>
           <div class="scale-popover__head">
-            <label for="page-scale-slider">Page Scale</label>
+            <label for="page-scale-slider">{t("scale.label")}</label>
             <strong data-scale-readout>1.35x</strong>
           </div>
           <input
@@ -154,11 +228,11 @@ const {
             data-scale-slider
           />
           <div class="scale-popover__foot">
-            <span>Narrow</span>
+            <span>{t("scale.narrow")}</span>
             <button type="button" class="clear-btn scale-reset-btn" data-scale-reset>
-              Reset
+              {t("scale.reset")}
             </button>
-            <span>Wide</span>
+            <span>{t("scale.wide")}</span>
           </div>
         </div>
       </div>

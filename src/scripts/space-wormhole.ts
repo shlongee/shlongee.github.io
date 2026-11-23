@@ -199,6 +199,7 @@ export function mountSpaceWormhole(): void {
     stemMat: THREE.RawShaderMaterial;
     effect: MushroomEffect;
     label: string;
+    labelRu: string;
     colorHex: string;
     speedMul: number;
     phase: number;
@@ -208,12 +209,12 @@ export function mountSpaceWormhole(): void {
     baseScale: number;
   }
 
-  const mushroomConfigs: Array<{ effect: MushroomEffect; color: string; label: string }> = [
-    { effect: "aurora", color: "#4af2be", label: "✦ Aurora Shift" },
-    { effect: "ripple", color: "#6ee2ff", label: "✦ Warp Ripple" },
-    { effect: "surge", color: "#c98eff", label: "✦ Star Surge" },
-    { effect: "bloom", color: "#ff9ed6", label: "✦ Spore Glow" },
-    { effect: "aurora", color: "#7effe0", label: "✦ Mist Bloom" },
+  const mushroomConfigs: Array<{ effect: MushroomEffect; color: string; label: string, labelRu: string }> = [
+    { effect: "aurora", color: "#4af2be", label: "✦ Aurora shift", labelRu: "✦ Сдвиг сияния" },
+    { effect: "ripple", color: "#6ee2ff", label: "✦ Warp ripple", labelRu: "✦ Спазм червоточины" },
+    { effect: "surge", color: "#c98eff", label: "✦ Star surge", labelRu: "✦ Звёздный рывок" },
+    { effect: "bloom", color: "#ff9ed6", label: "✦ Spore glow", labelRu: "✦ Сияние спор" },
+    { effect: "aurora", color: "#7effe0", label: "✦ Recolor", labelRu: "✦ Перекрас" },
   ];
 
   const mushroomRoot = new THREE.Group();
@@ -272,6 +273,7 @@ export function mountSpaceWormhole(): void {
       stemMat,
       effect: cfg.effect,
       label: cfg.label,
+      labelRu: cfg.labelRu,
       colorHex: cfg.color,
       speedMul: 0.9 + Math.random() * 0.5,
       phase: index * 1.9,
@@ -292,7 +294,7 @@ export function mountSpaceWormhole(): void {
   let pulseTimer = 0;
   const triggerPulse = () => {
     overrideWarp = null;
-    warpTarget = 0.48;
+    warpTarget = 0.2;
     if (pulseTimer) window.clearTimeout(pulseTimer);
     pulseTimer = window.setTimeout(() => {
       warpTarget = 0;
@@ -319,7 +321,7 @@ export function mountSpaceWormhole(): void {
     whisper.style.top = `${cy - 12}px`;
     whisper.style.color = color;
     document.body.append(whisper);
-    window.setTimeout(() => whisper.remove(), 1100);
+    window.setTimeout(() => whisper.remove(), 20000);
 
     for (let i = 0; i < 12; i++) {
       const spore = document.createElement("span");
@@ -370,7 +372,8 @@ export function mountSpaceWormhole(): void {
     if (!m || m.popping) return;
 
     m.popping = true;
-    spawnDomBurst(e.clientX, e.clientY, m.colorHex, m.label);
+    const label = document.documentElement.lang === "ru" ? m.labelRu : m.label;
+    spawnDomBurst(e.clientX, e.clientY, m.colorHex, label);
 
     if (m.effect === "aurora") onShuffle();
     else if (m.effect === "ripple") triggerPulse();

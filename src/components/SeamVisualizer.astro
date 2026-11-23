@@ -1,13 +1,36 @@
-<div class="arcane-viz seam-viz">
+---
+import type { Lang } from "../i18n/ui";
+import { resolveLang } from "../i18n/utils";
+
+interface Props {
+  lang?: Lang;
+}
+
+const lang = Astro.props.lang ?? resolveLang(Astro.currentLocale);
+const isRu = lang === "ru";
+
+const swirlLabel = isRu ? "Закручивание:" : "Swirl:";
+const modeSeam = isRu ? "Режим: шов atan()" : "Mode: atan() Seam";
+const modeSeamless = isRu ? "Режим: бесшовный (cosθ, sinθ)" : "Mode: Seamless (cosθ, sinθ)";
+const note = isRu
+  ? "обратите внимание на резкий горизонтальный разрез в режиме atan() :3"
+  : "notice the sharp horizontal cut in atan() mode :3";
+---
+
+<div
+  class="arcane-viz seam-viz"
+  data-mode-seam={modeSeam}
+  data-mode-seamless={modeSeamless}
+>
   <div class="arcane-viz__controls">
     <label>
-      Swirl: <strong class="val-swirl">1.0</strong>
+      {swirlLabel} <strong class="val-swirl">1.0</strong>
       <input type="range" class="slider-swirl" min="0" max="3" step="0.1" value="1" />
     </label>
-    <button type="button" class="clear-btn seam-mode">Mode: atan() Seam</button>
+    <button type="button" class="clear-btn seam-mode">{modeSeam}</button>
   </div>
   <canvas class="arcane-viz__canvas seam-canvas" width="520" height="170"></canvas>
-  <p class="arcane-viz__note">notice the sharp horizontal cut in atan() mode :3</p>
+  <p class="arcane-viz__note">{note}</p>
 </div>
 
 <script>
@@ -23,12 +46,14 @@
       const modeBtn = root.querySelector<HTMLButtonElement>(".seam-mode");
       if (!canvas || !ctx || !slider || !readout || !modeBtn) return;
 
+      const labelSeam = root.dataset.modeSeam || "Mode: atan() Seam";
+      const labelSeamless = root.dataset.modeSeamless || "Mode: Seamless (cosθ, sinθ)";
       let seamless = false;
 
       const draw = () => {
         const swirl = parseFloat(slider.value);
         readout.textContent = swirl.toFixed(1);
-        modeBtn.textContent = seamless ? "Mode: Seamless (cosθ, sinθ)" : "Mode: atan() Seam";
+        modeBtn.textContent = seamless ? labelSeamless : labelSeam;
 
         const w = canvas.width;
         const h = canvas.height;
@@ -43,7 +68,6 @@
             const dist = Math.max(Math.hypot(dx, dy), 0.05);
             const angle = Math.atan2(dy, dx) + swirl / (dist + 0.35);
 
-            // Broken raw angle vs smooth cyclic cos(angle)
             const wave = seamless
               ? 0.5 + 0.5 * Math.sin(Math.cos(angle) * 3.0 + Math.sin(angle) * 2.0 + 2.0 / dist)
               : ((angle / Math.PI) * 0.5 + 0.5) % 1;

@@ -1,4 +1,7 @@
 ---
+import { DEFAULT_LANG, LANGUAGES, type Lang } from "../i18n/ui";
+import { getLocalePaths, localePath, resolveLang, useTranslations } from "../i18n/utils";
+
 export interface BreadcrumbItem {
   name: string;
   path: string;
@@ -8,6 +11,9 @@ export interface Props {
   title: string;
   description: string;
   path?: string;
+  lang?: Lang;
+  alternateLocales?: Lang[];
+  localePaths?: Partial<Record<Lang, string>>;
   ogType?: "website" | "article";
   pubDate?: Date;
   updatedDate?: Date;
@@ -21,6 +27,9 @@ const {
   title,
   description,
   path = Astro.url.pathname,
+  lang = resolveLang(Astro.currentLocale),
+  alternateLocales = [...LANGUAGES],
+  localePaths,
   ogType = "website",
   pubDate,
   updatedDate,
@@ -30,6 +39,7 @@ const {
   breadcrumbs = [],
 } = Astro.props;
 
+const t = useTranslations(lang);
 const clean = (s: string) => s.replace(/\s+/g, " ").trim();
 const cleanTitle = clean(title);
 const cleanDescription = clean(description);
@@ -39,17 +49,31 @@ const canonical = new URL(path, `${siteUrl}/`).toString();
 const fullTitle = rawTitle ? cleanTitle : `${cleanTitle} — Shlongeeland`;
 const imageUrl = ogImage ? new URL(ogImage, `${siteUrl}/`).toString() : undefined;
 
+const allPaths = getLocalePaths(path, localePaths);
+const alternates = alternateLocales.map((altLang) => ({
+  lang: altLang,
+  href: new URL(allPaths[altLang], `${siteUrl}/`).toString(),
+}));
+
+const xDefaultHref =
+  alternates.find((a) => a.lang === DEFAULT_LANG)?.href ?? canonical;
+
+const rssLinks = LANGUAGES.map((l) => ({
+  lang: l,
+  href: new URL(localePath(l, "/rss.xml"), `${siteUrl}/`).toString(),
+}));
+
 const schemaGraph: Record<string, unknown>[] = [
   {
     "@type": "WebSite",
     "@id": `${siteUrl}/#website`,
     url: `${siteUrl}/`,
     name: "Shlongeeland",
-    description:
-      "Technical devlog by Shlongee covering GLSL shaders, Raylib HDR rendering, Three.js WebGL experiments, and Astro engineering.",
+    inLanguage: lang,
+    description: t("site.seoDesc"),
     potentialAction: {
       "@type": "SearchAction",
-      target: `${siteUrl}/blog/?q={search_term_string}`,
+      target: `${siteUrl}${localePath(lang, "/blog/")}?q={search_term_string}`,
       "query-input": "required name=search_term_string",
     },
   },
@@ -57,7 +81,7 @@ const schemaGraph: Record<string, unknown>[] = [
     "@type": "Person",
     "@id": `${siteUrl}/#author`,
     name: "Shlongee",
-    url: `${siteUrl}/about/`,
+    url: `${siteUrl}${localePath(lang, "/about/")}`,
     sameAs: ["https://github.com/shlongee"],
   },
 ];
@@ -68,6 +92,7 @@ if (ogType === "article" && pubDate) {
     mainEntityOfPage: { "@type": "WebPage", "@id": canonical },
     headline: cleanTitle,
     description: cleanDescription,
+    inLanguage: lang,
     datePublished: pubDate.toISOString(),
     ...(updatedDate && { dateModified: updatedDate.toISOString() }),
     author: { "@id": `${siteUrl}/#author` },
@@ -101,7 +126,10 @@ const jsonLd = {
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 
 <meta property="og:type" content={ogType} />
-<meta property="og:locale" content="en_US" />
+<meta property="og:locale" content={lang === "ru" ? "ru_RU" : "en_US"} />
+{LANGUAGES.filter((l) => l !== lang).map((alt) => (
+  <meta property="og:locale:alternate" content={alt === "ru" ? "ru_RU" : "en_US"} />
+))}
 <meta property="og:site_name" content="Shlongeeland" />
 <meta property="og:title" content={fullTitle} />
 <meta property="og:description" content={cleanDescription} />
@@ -117,5 +145,16 @@ const jsonLd = {
 {imageUrl && <meta name="twitter:image" content={imageUrl} />}
 
 <link rel="canonical" href={canonical} />
-<link rel="alternate" type="application/rss+xml" title="Shlongeeland RSS" href={`${siteUrl}/rss.xml`} />
+{alternates.map((alt) => (
+  <link rel="alternate" hreflang={alt.lang} href={alt.href} />
+))}
+<link rel="alternate" hreflang="x-default" href={xDefaultHref} />
+{rssLinks.map((feed) => (
+  <link
+    rel="alternate"
+    type="application/rss+xml"
+    title={`Shlongeeland (${feed.lang.toUpperCase()}) RSS`}
+    href={feed.href}
+  />
+))}
 <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />

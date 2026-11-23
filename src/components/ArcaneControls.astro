@@ -1,25 +1,48 @@
 ---
 import ThemeIcon from "./ThemeIcon.astro";
+import { LANGUAGE_META, type Lang } from "../i18n/ui";
+import { resolveLang, useTranslations } from "../i18n/utils";
 
 interface Props {
   showCrystal?: boolean;
   showScale?: boolean;
+  lang?: Lang;
 }
 
-const { showCrystal = true, showScale = showCrystal } = Astro.props;
+const {
+  showCrystal = true,
+  showScale = showCrystal,
+  lang = resolveLang(Astro.currentLocale),
+} = Astro.props;
+
+const t = useTranslations(lang);
+const currentMeta = LANGUAGE_META[lang];
 ---
 
 <div class="arcane-controls">
-  <ThemeIcon />
+  <button
+    type="button"
+    class="arcane-btn arcane-btn--lang"
+    data-lang-toggle
+    aria-expanded="false"
+    aria-haspopup="menu"
+    aria-controls="lang-popover"
+    aria-label={`${t("controls.langAria")} (${currentMeta.nativeName})`}
+    title={`${t("controls.langTitle")}: ${currentMeta.nativeName}`}
+  >
+    <span class="lang-code" aria-hidden="true">{currentMeta.code}</span>
+  </button>
+
+  <ThemeIcon lang={lang} />
 
   {showCrystal && (
     <button
       type="button"
       class="arcane-btn arcane-btn--crystal"
       data-glass-toggle
-      aria-label="Toggle crystal transparency"
+      aria-label={t("controls.crystalAria")}
       aria-pressed="false"
-      title="Toggle crystal glass mode"
+      title={t("controls.crystalTitle")}
     >
       <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
         <path
@@ -38,8 +61,8 @@ const { showCrystal = true, showScale = showCrystal } = Astro.props;
       data-scale-toggle
       aria-expanded="false"
       aria-controls="scale-popover"
-      aria-label="Adjust page scale and width"
-      title="Adjust page scale & width"
+      aria-label={t("controls.scaleAria")}
+      title={t("controls.scaleTitle")}
     >
       <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
@@ -51,8 +74,8 @@ const { showCrystal = true, showScale = showCrystal } = Astro.props;
     type="button"
     class="arcane-btn arcane-btn--shuffle arcane-btn--aurora-orb"
     data-wormhole-shuffle
-    aria-label="Shuffle wormhole colors"
-    title="Shuffle wormhole colors"
+    aria-label={t("controls.shuffleAria")}
+    title={t("controls.shuffleTitle")}
   >
     <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
       <circle

@@ -1,16 +1,44 @@
-<div class="arcane-viz fp-viz">
+---
+import type { Lang } from "../i18n/ui";
+import { resolveLang } from "../i18n/utils";
+
+interface Props {
+  lang?: Lang;
+}
+
+const lang = Astro.props.lang ?? resolveLang(Astro.currentLocale);
+const isRu = lang === "ru";
+
+const labels = {
+  boost: isRu ? "Сила свечения:" : "Glow Boost:",
+  tail: isRu ? "Тусклый хвост:" : "Faint Tail:",
+  bar8: isRu ? "8-bit LDR (фиксированный шаг 1/255)" : "8-bit LDR (1/255 fixed steps)",
+  bar32: "32-bit HDR (R11G11B10_FLOAT)",
+  bar64: "64-bit HDR (R16G16B16A16)",
+  note: isRu
+    ? "Смотрите, как 8-бит распадается на кольца, пока 64-битный Float16 остаётся гладким."
+    : "watch 8-bit turn into rings while 64-bit Float16 stays smooth.",
+};
+---
+
+<div
+  class="arcane-viz fp-viz"
+  data-label-8bit={labels.bar8}
+  data-label-32bit={labels.bar32}
+  data-label-64bit={labels.bar64}
+>
   <div class="arcane-viz__controls">
     <label>
-      Glow Boost: <strong class="val-int">8.0x</strong>
+      {labels.boost} <strong class="val-int">8.0x</strong>
       <input type="range" class="slider-int" min="1" max="25" step="0.5" value="8" />
     </label>
     <label>
-      Faint Tail: <strong class="val-max">0.05</strong>
+      {labels.tail} <strong class="val-max">0.05</strong>
       <input type="range" class="slider-max" min="0.01" max="0.25" step="0.01" value="0.05" />
     </label>
   </div>
   <canvas class="arcane-viz__canvas viz-canvas" width="640" height="190"></canvas>
-  <p class="arcane-viz__note">watch 8-bit turn into rings while 64-bit Float16 stays smooth. </p>
+  <p class="arcane-viz__note">{labels.note}</p>
 </div>
 
 <script>
@@ -44,9 +72,9 @@
       if (!canvas || !ctx || !sInt || !sMax || !lInt || !lMax) return;
 
       const formats = [
-        { label: "8-bit LDR (1/255 fixed steps)", fn: (v: number) => quantize8Bit(v) },
-        { label: "32-bit HDR (R11G11B10_FLOAT)", fn: (v: number) => quantizeFloat(v, 5) },
-        { label: "64-bit HDR (R16G16B16A16)", fn: (v: number) => quantizeFloat(v, 10) },
+        { label: root.dataset.label8bit || "8-bit LDR (1/255 fixed steps)", fn: (v: number) => quantize8Bit(v) },
+        { label: root.dataset.label32bit || "32-bit HDR (R11G11B10_FLOAT)", fn: (v: number) => quantizeFloat(v, 5) },
+        { label: root.dataset.label64bit || "64-bit HDR (R16G16B16A16)", fn: (v: number) => quantizeFloat(v, 10) },
       ];
 
       const draw = () => {

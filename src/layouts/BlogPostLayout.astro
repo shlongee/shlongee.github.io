@@ -1,5 +1,13 @@
 ---
 import BaseLayout from "./BaseLayout.astro";
+import { LANGUAGES, type Lang } from "../i18n/ui";
+import {
+  formatDate,
+  getTagLabel,
+  localePath,
+  resolveLang,
+  useTranslations,
+} from "../i18n/utils";
 
 export interface Props {
   title: string;
@@ -8,18 +16,29 @@ export interface Props {
   updatedDate?: Date;
   tags: string[];
   ogImage?: string;
+  lang?: Lang;
+  localePaths?: Partial<Record<Lang, string>>;
+  alternateLocales?: Lang[];
 }
 
-const { title, description, pubDate, updatedDate, tags, ogImage } = Astro.props;
-const formattedDate = pubDate.toLocaleDateString("en-US", {
-  year: "numeric",
-  month: "short",
-  day: "numeric",
-});
+const {
+  title,
+  description,
+  pubDate,
+  updatedDate,
+  tags,
+  ogImage,
+  lang = resolveLang(Astro.currentLocale),
+  localePaths,
+  alternateLocales = [...LANGUAGES],
+} = Astro.props;
+
+const t = useTranslations(lang);
+const formattedDate = formatDate(pubDate, lang);
 
 const breadcrumbs = [
-  { name: "Home", path: "/" },
-  { name: "Blog", path: "/blog/" },
+  { name: t("nav.home"), path: localePath(lang, "/") },
+  { name: t("nav.blog"), path: localePath(lang, "/blog/") },
   { name: title, path: Astro.url.pathname },
 ];
 ---
@@ -27,6 +46,9 @@ const breadcrumbs = [
 <BaseLayout
   title={title}
   description={description}
+  lang={lang}
+  localePaths={localePaths}
+  alternateLocales={alternateLocales}
   ogType="article"
   pubDate={pubDate}
   updatedDate={updatedDate}
@@ -39,15 +61,19 @@ const breadcrumbs = [
       <p class="post-meta">
         <time datetime={pubDate.toISOString()}>{formattedDate}</time>
         {updatedDate && (
-          <span> · Updated {updatedDate.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</span>
+          <span> · {t("blog.updated")} {formatDate(updatedDate, lang)}</span>
         )}
       </p>
       <h1>{title}</h1>
       <p class="post-description">{description}</p>
       {tags.length > 0 && (
-        <ul class="tag-list" aria-label="Post tags">
+        <ul class="tag-list" aria-label={t("nav.tags")}>
           {tags.map((tag) => (
-            <li><a class="tag-pill" href={`/tags/${encodeURIComponent(tag)}/`}>#{tag}</a></li>
+            <li>
+              <a class="tag-pill" href={localePath(lang, `/tags/${encodeURIComponent(tag)}/`)}>
+                #{getTagLabel(lang, tag)}
+              </a>
+            </li>
           ))}
         </ul>
       )}

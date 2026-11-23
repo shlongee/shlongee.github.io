@@ -1,10 +1,36 @@
 ---
+import type { Lang } from "../i18n/ui";
+import { localePath, resolveLang, useTranslations } from "../i18n/utils";
+
+interface Props {
+  lang?: Lang;
+}
+
+const lang = Astro.props.lang ?? resolveLang(Astro.currentLocale);
+const t = useTranslations(lang);
 const pathname = Astro.url.pathname;
+
 const links = [
-  { href: "/", label: "Home", match: (p: string) => p === "/" },
-  { href: "/blog/", label: "Blog", match: (p: string) => p.startsWith("/blog") },
-  { href: "/tags/", label: "Tags", match: (p: string) => p.startsWith("/tags") },
-  { href: "/about/", label: "About", match: (p: string) => p.startsWith("/about") },
+  {
+    href: localePath(lang, "/"),
+    label: t("nav.home"),
+    match: (p: string) => (lang === "ru" ? p === "/ru/" || p === "/ru" : p === "/"),
+  },
+  {
+    href: localePath(lang, "/blog/"),
+    label: t("nav.blog"),
+    match: (p: string) => p.startsWith(localePath(lang, "/blog")),
+  },
+  {
+    href: localePath(lang, "/tags/"),
+    label: t("nav.tags"),
+    match: (p: string) => p.startsWith(localePath(lang, "/tags")),
+  },
+  {
+    href: localePath(lang, "/about/"),
+    label: t("nav.about"),
+    match: (p: string) => p.startsWith(localePath(lang, "/about")),
+  },
 ];
 ---
 
