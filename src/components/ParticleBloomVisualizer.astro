@@ -41,11 +41,45 @@ const haloLabel = isRu ? "Свечение ореола:" : "Halo Glow:";
       const lHalo = root.querySelector<HTMLElement>(".val-halo");
       if (!canvas || !ctx || !sCore || !sHalo || !lCore || !lHalo) return;
 
+      const radius = 34;
+      const spriteSize = radius * 2 + 1;
+      const stampCanvas = document.createElement("canvas");
+      stampCanvas.width = spriteSize;
+      stampCanvas.height = spriteSize;
+      const sctx = stampCanvas.getContext("2d");
+      if (!sctx) return;
+
+      const stampImg = sctx.createImageData(spriteSize, spriteSize);
+      const distTable = new Float32Array(spriteSize * spriteSize);
+      for (let y = -radius, idx = 0; y <= radius; y++) {
+        for (let x = -radius; x <= radius; x++, idx++) {
+          distTable[idx] = Math.hypot(x, y) / radius;
+        }
+      }
+
       const draw = () => {
         const k = parseFloat(sCore.value);
         const hAmt = parseFloat(sHalo.value);
         lCore.textContent = k.toFixed(1);
         lHalo.textContent = hAmt.toFixed(2);
+
+        const data = stampImg.data;
+        for (let i = 0; i < distTable.length; i++) {
+          const d = distTable[i];
+          const p = i * 4;
+          if (d > 1) {
+            data[p + 3] = 0;
+            continue;
+          }
+          const core = Math.exp(-d * d * k);
+          const halo = Math.exp(-d * 2.4) * hAmt;
+          const a = Math.min(1, (core + halo) * (1 - d * d));
+          data[p] = Math.round(85 + core * 170);
+          data[p + 1] = Math.round(220 + core * 35);
+          data[p + 2] = 255;
+          data[p + 3] = Math.round(a * 255);
+        }
+        sctx.putImageData(stampImg, 0, 0);
 
         const w = canvas.width;
         const h = canvas.height;
@@ -56,19 +90,7 @@ const haloLabel = isRu ? "Свечение ореола:" : "Halo Glow:";
         for (let i = 0; i < dots; i++) {
           const cx = ((i + 1) / (dots + 1)) * w;
           const cy = h / 2 + Math.sin(i * 1.1) * 14;
-          const radius = 34;
-
-          for (let y = -radius; y <= radius; y++) {
-            for (let x = -radius; x <= radius; x++) {
-              const d = Math.hypot(x, y) / radius;
-              if (d > 1) continue;
-              const core = Math.exp(-d * d * k);
-              const halo = Math.exp(-d * 2.4) * hAmt;
-              const a = Math.min(1, (core + halo) * (1 - d * d));
-              ctx.fillStyle = `rgba(${Math.round(85 + core * 170)}, ${Math.round(220 + core * 35)}, 255, ${a.toFixed(3)})`;
-              ctx.fillRect(cx + x, cy + y, 1, 1);
-            }
-          }
+          ctx.drawImage(stampCanvas, cx - radius, cy - radius);
         }
       };
 

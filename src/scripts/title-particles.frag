@@ -1,15 +1,12 @@
 precision highp float;
 
-uniform sampler2D uTexture;
 uniform vec3 uColorPrimary;
 uniform vec3 uColorSecondary;
 
-varying vec2 vPUv;
 varying vec2 vUv;
 varying float vShimmer;
 
 void main() {
-  float grey = texture2D(uTexture, vPUv).r;
   float d = distance(vUv, vec2(0.5)) * 2.0;
   if (d > 1.0) discard;
 

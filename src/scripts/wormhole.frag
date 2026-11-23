@@ -47,6 +47,7 @@ float fbm3(vec3 p, float detailWeight) {
   float value = 0.0;
   float amp = 0.5;
   for (int i = 0; i < 4; i++) {
+    if (i >= 2 && detailWeight <= 0.01) break;
     float weight = (i >= 2) ? detailWeight : 1.0;
     value += amp * weight * noise3(p);
     p *= 2.03;
@@ -79,6 +80,11 @@ vec3 renderWormhole(vec2 uv, float swirlStrength) {
 
   vec2 p = uv + springWobble;
   float dist = max(length(p), 0.0005);
+  float outerMask = smoothstep(2.7, 0.3, dist);
+  if (outerMask < 0.002) {
+    return ambientSky;
+  }
+
   vec2 dir = p / dist;
   vec2 swirled = rotate2D(dir, swirlStrength / (dist + 0.34));
 
@@ -122,8 +128,7 @@ vec3 renderWormhole(vec2 uv, float swirlStrength) {
   col += mix(uColorBase, uColorAccent, 0.45 + uWarp * 0.4) * veil * (0.16 + uWarp * 0.42);
 
   // Blend smoothly into the cozy ambient sky at the far outer edges
-  col = mix(ambientSky, col, smoothstep(2.7, 0.3, dist));
-  return col;
+  return mix(ambientSky, col, outerMask);
 }
 
 void main() {

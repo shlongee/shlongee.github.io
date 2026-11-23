@@ -1,0 +1,169 @@
+---
+import { LANGUAGE_META, LANGUAGES, type Lang } from "../i18n/ui";
+import { getLocalePaths, resolveLang, useTranslations } from "../i18n/utils";
+
+interface Props {
+  lang?: Lang;
+  localePaths?: Partial<Record<Lang, string>>;
+  showCrystal?: boolean;
+  showScale?: boolean;
+}
+
+const {
+  lang = resolveLang(Astro.currentLocale),
+  localePaths,
+  showCrystal = true,
+  showScale = true,
+} = Astro.props;
+
+const t = useTranslations(lang);
+const currentMeta = LANGUAGE_META[lang];
+const paths = getLocalePaths(Astro.url.pathname, localePaths);
+---
+
+<div
+  id="settings-popover"
+  class="settings-popover"
+  data-settings-popover
+  role="dialog"
+  aria-label={t("controls.settingsTitle")}
+  hidden
+>
+  <div class="settings-group">
+    <button
+      type="button"
+      class="settings-item"
+      data-lang-toggle
+      aria-expanded="false"
+      aria-controls="lang-subpanel"
+      aria-label={`${t("controls.langAria")} (${currentMeta.nativeName})`}
+    >
+      <span class="settings-item__icon" aria-hidden="true">
+        <span class="lang-code">{currentMeta.code}</span>
+      </span>
+      <span class="settings-item__label">{t("controls.langTitle")}</span>
+      <span class="settings-item__value">{currentMeta.nativeName}</span>
+      <span class="settings-item__chev" aria-hidden="true">▾</span>
+    </button>
+
+    <div
+      id="lang-subpanel"
+      class="settings-subpanel lang-list"
+      data-lang-panel
+      role="menu"
+      aria-label={t("controls.langMenuAria")}
+      hidden
+    >
+      {LANGUAGES.map((itemLang) => {
+        const meta = LANGUAGE_META[itemLang];
+        const isActive = itemLang === lang;
+        return (
+          <a
+            href={paths[itemLang]}
+            class:list={["lang-option", { "is-active": isActive }]}
+            role="menuitemradio"
+            aria-checked={isActive}
+            hreflang={itemLang}
+            data-lang-option={itemLang}
+          >
+            <span class="lang-option__code">{meta.code}</span>
+            <span class="lang-option__name">{meta.nativeName}</span>
+            {isActive && <span class="lang-option__mark" aria-hidden="true">✦</span>}
+          </a>
+        );
+      })}
+    </div>
+  </div>
+
+  <button
+    type="button"
+    class="settings-item"
+    data-theme-toggle
+    data-label-dark={t("controls.themeDark")}
+    data-label-light={t("controls.themeLight")}
+    aria-pressed="false"
+    aria-label={t("controls.themeAria")}
+  >
+    <span class="settings-item__icon" aria-hidden="true">
+      <svg class="arcane-sigil" viewBox="0 0 32 32" width="20" height="20">
+        <circle class="sigil-ring" cx="16" cy="16" r="13" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="3 2.5" />
+        <g class="sigil-sun">
+          <circle cx="16" cy="16" r="4.5" fill="currentColor" />
+          <path d="M16 4v4M16 24v4M4 16h4M24 16h4M7.5 7.5l2.8 2.8M21.7 21.7l2.8 2.8M24.5 7.5l-2.8 2.8M10.3 21.7l-2.8 2.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+        </g>
+        <g class="sigil-moon">
+          <path d="M19.8 8.8a7.4 7.4 0 1 0 3.4 13.3 6.2 6.2 0 0 1-3.4-13.3Z" fill="currentColor" />
+          <path d="M22.5 9.5l.8 1.9 1.9.8-1.9.8-.8 1.9-.8-1.9-1.9-.8 1.9-.8z" fill="currentColor" />
+        </g>
+      </svg>
+    </span>
+    <span class="settings-item__label">{t("controls.themeLabel")}</span>
+    <span class="settings-item__value" data-theme-value>{t("controls.themeLight")}</span>
+  </button>
+
+  {showCrystal && (
+    <button
+      type="button"
+      class="settings-item"
+      data-glass-toggle
+      data-label-on={t("controls.on")}
+      data-label-off={t("controls.off")}
+      aria-pressed="false"
+      aria-label={t("controls.crystalAria")}
+    >
+      <span class="settings-item__icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="19" height="19">
+          <path
+            d="M12 2L5 9.5 12 22l7-12.5L12 2zm0 2.9l4.1 4.4L12 18.2 7.9 9.3 12 4.9z"
+            fill="currentColor"
+          />
+          <path d="M5 9.5h14" stroke="currentColor" stroke-width="1.2" opacity="0.65" />
+        </svg>
+      </span>
+      <span class="settings-item__label">{t("controls.crystalLabel")}</span>
+      <span class="settings-item__value" data-glass-value>{t("controls.off")}</span>
+    </button>
+  )}
+
+  {showScale && (
+    <div class="settings-group">
+      <button
+        type="button"
+        class="settings-item"
+        data-scale-toggle
+        aria-expanded="false"
+        aria-controls="scale-subpanel"
+        aria-label={t("controls.scaleAria")}
+      >
+        <span class="settings-item__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+          </svg>
+        </span>
+        <span class="settings-item__label">{t("controls.scaleLabel")}</span>
+        <span class="settings-item__value" data-scale-readout>1.35x</span>
+        <span class="settings-item__chev" aria-hidden="true">▾</span>
+      </button>
+
+      <div id="scale-subpanel" class="settings-subpanel scale-panel" data-scale-panel hidden>
+        <input
+          id="page-scale-slider"
+          type="range"
+          min="0.7"
+          max="2.0"
+          step="0.05"
+          value="1.35"
+          aria-label={t("scale.label")}
+          data-scale-slider
+        />
+        <div class="scale-popover__foot">
+          <span>{t("scale.narrow")}</span>
+          <button type="button" class="clear-btn scale-reset-btn" data-scale-reset>
+            {t("scale.reset")}
+          </button>
+          <span>{t("scale.wide")}</span>
+        </div>
+      </div>
+    </div>
+  )}
+</div>

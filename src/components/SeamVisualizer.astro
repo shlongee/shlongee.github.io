@@ -46,35 +46,51 @@ const modeSeamless = isRu ? "Режим: бесшовный (cosθ, sinθ)" : "M
       const labelSeamless = root.dataset.modeSeamless || "Mode: Seamless (cosθ, sinθ)";
       let seamless = false;
 
+      const w = canvas.width;
+      const h = canvas.height;
+      const count = w * h;
+      const img = ctx.createImageData(w, h);
+      const baseAngle = new Float32Array(count);
+      const swirlWeight = new Float32Array(count);
+      const depthPhase = new Float32Array(count);
+      const vignette = new Float32Array(count);
+
+      const cx = w / 2;
+      const cy = h / 2;
+      const invHalfH = 1 / (h * 0.5);
+
+      for (let y = 0, i = 0; y < h; y++) {
+        const dy = (y - cy) * invHalfH;
+        for (let x = 0; x < w; x++, i++) {
+          const dx = (x - cx) * invHalfH;
+          const dist = Math.max(Math.hypot(dx, dy), 0.05);
+          baseAngle[i] = Math.atan2(dy, dx);
+          swirlWeight[i] = 1 / (dist + 0.35);
+          depthPhase[i] = 2.0 / dist;
+          vignette[i] = Math.min(1, dist * 1.4);
+        }
+      }
+
       const draw = () => {
         const swirl = parseFloat(slider.value);
         readout.textContent = swirl.toFixed(1);
         modeBtn.textContent = seamless ? labelSeamless : labelSeam;
 
-        const w = canvas.width;
-        const h = canvas.height;
-        const img = ctx.createImageData(w, h);
-        const cx = w / 2;
-        const cy = h / 2;
+        const data = img.data;
+        const invPiHalf = 0.5 / Math.PI;
 
-        for (let y = 0; y < h; y++) {
-          for (let x = 0; x < w; x++) {
-            const dx = (x - cx) / (h * 0.5);
-            const dy = (y - cy) / (h * 0.5);
-            const dist = Math.max(Math.hypot(dx, dy), 0.05);
-            const angle = Math.atan2(dy, dx) + swirl / (dist + 0.35);
+        for (let i = 0; i < count; i++) {
+          const angle = baseAngle[i] + swirl * swirlWeight[i];
+          const wave = seamless
+            ? 0.5 + 0.5 * Math.sin(Math.cos(angle) * 3.0 + Math.sin(angle) * 2.0 + depthPhase[i])
+            : ((angle * invPiHalf + 0.5) % 1 + 1) % 1;
 
-            const wave = seamless
-              ? 0.5 + 0.5 * Math.sin(Math.cos(angle) * 3.0 + Math.sin(angle) * 2.0 + 2.0 / dist)
-              : ((angle / Math.PI) * 0.5 + 0.5) % 1;
-
-            const v = Math.max(0, Math.min(1, wave * Math.min(1, dist * 1.4)));
-            const idx = (y * w + x) * 4;
-            img.data[idx] = Math.round(v * 30);
-            img.data[idx + 1] = Math.round(v * 225);
-            img.data[idx + 2] = Math.round(v * 245);
-            img.data[idx + 3] = 255;
-          }
+          const v = Math.max(0, Math.min(1, wave * vignette[i]));
+          const p = i * 4;
+          data[p] = Math.round(v * 30);
+          data[p + 1] = Math.round(v * 225);
+          data[p + 2] = Math.round(v * 245);
+          data[p + 3] = 255;
         }
         ctx.putImageData(img, 0, 0);
       };

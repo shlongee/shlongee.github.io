@@ -4,6 +4,7 @@ import { isValidLang } from "../i18n/utils";
 
 const THEME_KEY = "theme";
 const CRYSTAL_KEY = "shlongeeland-crystal";
+const PAUSE_KEY = "shlongeeland-paused";
 const SCALE_KEY = "shlongeeland-scale-v2";
 export const DEFAULT_PAGE_SCALE = 1.35;
 
@@ -61,34 +62,82 @@ function syncScaleControls(scale = getStoredPageScale()): void {
   });
 }
 
-function positionPopover(pop: HTMLElement, trigger: HTMLElement, estHeight: number): void {
-  const rect = trigger.getBoundingClientRect();
-  const top = Math.min(window.innerHeight - estHeight, rect.bottom + 10);
-  const right = Math.max(12, window.innerWidth - rect.right);
+let activeSettingsTrigger: HTMLButtonElement | null = null;
+
+function clampPopoverToViewport(pop: HTMLElement, trigger: HTMLElement): void {
+  const margin = 12;
+  const vw = document.documentElement.clientWidth || window.innerWidth;
+  const vh = document.documentElement.clientHeight || window.innerHeight;
+
+  pop.style.maxWidth = `${Math.max(180, vw - margin * 2)}px`;
+  pop.style.maxHeight = `${Math.max(140, vh - margin * 2)}px`;
+
+  const triggerRect = trigger.getBoundingClientRect();
+  const popWidth = pop.offsetWidth;
+  const popHeight = pop.offsetHeight;
+
+  const rawLeft = triggerRect.right - popWidth;
+  const left = Math.min(Math.max(margin, rawLeft), Math.max(margin, vw - popWidth - margin));
+
+  const spaceBelow = vh - triggerRect.bottom - 10 - margin;
+  const spaceAbove = triggerRect.top - 10 - margin;
+  let top = triggerRect.bottom + 10;
+  if (popHeight > spaceBelow && spaceAbove > spaceBelow) {
+    top = triggerRect.top - popHeight - 10;
+  }
+  top = Math.min(Math.max(margin, top), Math.max(margin, vh - popHeight - margin));
+
+  pop.style.left = `${Math.round(left)}px`;
   pop.style.top = `${Math.round(top)}px`;
-  pop.style.right = `${Math.round(right)}px`;
+  pop.style.right = "auto";
 }
 
-function setScalePopoverOpen(open: boolean, trigger?: HTMLButtonElement | null): void {
-  if (open) setLangPopoverOpen(false);
-  document.querySelectorAll<HTMLButtonElement>("[data-scale-toggle]").forEach((btn) => {
-    btn.setAttribute("aria-expanded", String(open));
-  });
-  document.querySelectorAll<HTMLElement>("[data-scale-popover]").forEach((pop) => {
-    if (open && trigger) positionPopover(pop, trigger, 130);
-    pop.hidden = !open;
-  });
+function repositionOpenSettings(): void {
+  const pop = document.querySelector<HTMLElement>("[data-settings-popover]");
+  if (!pop || pop.hidden) return;
+  const trigger =
+    activeSettingsTrigger && document.contains(activeSettingsTrigger)
+      ? activeSettingsTrigger
+      : document.querySelector<HTMLButtonElement>("[data-settings-toggle]");
+  if (trigger) clampPopoverToViewport(pop, trigger);
 }
 
-function setLangPopoverOpen(open: boolean, trigger?: HTMLButtonElement | null): void {
-  if (open) setScalePopoverOpen(false);
+function setLangSubpanelOpen(open: boolean): void {
   document.querySelectorAll<HTMLButtonElement>("[data-lang-toggle]").forEach((btn) => {
     btn.setAttribute("aria-expanded", String(open));
   });
-  document.querySelectorAll<HTMLElement>("[data-lang-popover]").forEach((pop) => {
-    if (open && trigger) positionPopover(pop, trigger, 120);
-    pop.hidden = !open;
+  document.querySelectorAll<HTMLElement>("[data-lang-panel]").forEach((panel) => {
+    panel.hidden = !open;
   });
+  repositionOpenSettings();
+}
+
+function setScaleSubpanelOpen(open: boolean): void {
+  document.querySelectorAll<HTMLButtonElement>("[data-scale-toggle]").forEach((btn) => {
+    btn.setAttribute("aria-expanded", String(open));
+  });
+  document.querySelectorAll<HTMLElement>("[data-scale-panel]").forEach((panel) => {
+    panel.hidden = !open;
+  });
+  repositionOpenSettings();
+}
+
+function setSettingsPopoverOpen(open: boolean, trigger?: HTMLButtonElement | null): void {
+  activeSettingsTrigger = open ? (trigger ?? null) : null;
+  document.querySelectorAll<HTMLButtonElement>("[data-settings-toggle]").forEach((btn) => {
+    btn.setAttribute("aria-expanded", String(open));
+  });
+  document.querySelectorAll<HTMLElement>("[data-settings-popover]").forEach((pop) => {
+    pop.hidden = !open;
+    if (open) {
+      const anchor = trigger ?? document.querySelector<HTMLButtonElement>("[data-settings-toggle]");
+      if (anchor) clampPopoverToViewport(pop, anchor);
+    }
+  });
+  if (!open) {
+    setLangSubpanelOpen(false);
+    setScaleSubpanelOpen(false);
+  }
 }
 
 let lastPalette: { name?: string; base?: string; warp?: string; accent?: string } | undefined;
@@ -124,21 +173,43 @@ export function applyStoredModes(): void {
   const isCrystal = safeGet(CRYSTAL_KEY) === "true";
   document.documentElement.classList.toggle("crystal", isCrystal);
 
+  const isPaused = safeGet(PAUSE_KEY) === "true";
+  document.documentElement.classList.toggle("motion-paused", isPaused);
+
   const scale = getStoredPageScale();
   document.documentElement.style.setProperty("--page-scale", scale.toFixed(2));
 
-  document
-    .querySelectorAll<HTMLButtonElement>("[data-glass-toggle]")
-    .forEach((btn) => btn.setAttribute("aria-pressed", String(isCrystal)));
+  document.querySelectorAll<HTMLButtonElement>("[data-glass-toggle]").forEach((btn) => {
+    btn.setAttribute("aria-pressed", String(isCrystal));
+    const valEl = btn.querySelector<HTMLElement>("[data-glass-value]");
+    if (valEl) {
+      valEl.textContent = (isCrystal ? btn.dataset.labelOn : btn.dataset.labelOff) ?? "";
+    }
+  });
 
-  document
-    .querySelectorAll<HTMLButtonElement>("[data-theme-toggle]")
-    .forEach((btn) => btn.setAttribute("aria-pressed", String(isDark)));
+  document.querySelectorAll<HTMLButtonElement>("[data-theme-toggle]").forEach((btn) => {
+    btn.setAttribute("aria-pressed", String(isDark));
+    const valEl = btn.querySelector<HTMLElement>("[data-theme-value]");
+    if (valEl) {
+      valEl.textContent = (isDark ? btn.dataset.labelDark : btn.dataset.labelLight) ?? "";
+    }
+  });
+
+  document.querySelectorAll<HTMLButtonElement>("[data-motion-toggle]").forEach((btn) => {
+    btn.setAttribute("aria-pressed", String(isPaused));
+    const label = isPaused ? btn.dataset.labelResume : btn.dataset.labelPause;
+    const title = isPaused ? btn.dataset.titleResume : btn.dataset.titlePause;
+    if (label) btn.setAttribute("aria-label", label);
+    if (title) btn.title = title;
+  });
 
   syncScaleControls(scale);
   syncPaletteButton();
-  setScalePopoverOpen(false);
-  setLangPopoverOpen(false);
+}
+
+function closeMenusOnSwap(): void {
+  setSettingsPopoverOpen(false);
+  applyStoredModes();
 }
 
 let controlsBound = false;
@@ -156,16 +227,17 @@ export function mountArcaneControls(): void {
 
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
-      setScalePopoverOpen(false);
-      setLangPopoverOpen(false);
+      setSettingsPopoverOpen(false);
     }
   });
+
+  window.addEventListener("resize", repositionOpenSettings, { passive: true });
+  window.visualViewport?.addEventListener("resize", repositionOpenSettings, { passive: true });
 
   window.addEventListener("shlongeeland:palette", (e) => {
     syncPaletteButton((e as CustomEvent).detail);
   });
 
-  // Capture phase saves language choice & keeps query/hash intact during ClientRouter navigation
   document.addEventListener(
     "click",
     (event) => {
@@ -192,7 +264,7 @@ export function mountArcaneControls(): void {
 
       event.preventDefault();
       event.stopPropagation();
-      setLangPopoverOpen(false);
+      setSettingsPopoverOpen(false);
 
       const targetUrl = new URL(langOption.href, window.location.origin);
       if (!targetUrl.search && window.location.search) {
@@ -214,10 +286,18 @@ export function mountArcaneControls(): void {
   document.addEventListener("click", (event) => {
     const target = event.target as Element | null;
 
+    const settingsToggle = target?.closest<HTMLButtonElement>("[data-settings-toggle]");
+    if (settingsToggle) {
+      const isOpen = settingsToggle.getAttribute("aria-expanded") === "true";
+      setSettingsPopoverOpen(!isOpen, settingsToggle);
+      return;
+    }
+
     const langToggle = target?.closest<HTMLButtonElement>("[data-lang-toggle]");
     if (langToggle) {
       const isOpen = langToggle.getAttribute("aria-expanded") === "true";
-      setLangPopoverOpen(!isOpen, langToggle);
+      if (!isOpen) setScaleSubpanelOpen(false);
+      setLangSubpanelOpen(!isOpen);
       return;
     }
 
@@ -240,25 +320,36 @@ export function mountArcaneControls(): void {
       return;
     }
 
-    const shuffleBtn = target?.closest<HTMLButtonElement>("[data-wormhole-shuffle]");
-    if (shuffleBtn) {
-      shuffleBtn.classList.remove("is-spinning");
-      void shuffleBtn.offsetWidth;
-      shuffleBtn.classList.add("is-spinning");
-      window.dispatchEvent(new CustomEvent("shlongeeland:shuffle"));
-      return;
-    }
-
     const scaleToggle = target?.closest<HTMLButtonElement>("[data-scale-toggle]");
     if (scaleToggle) {
       const isOpen = scaleToggle.getAttribute("aria-expanded") === "true";
-      setScalePopoverOpen(!isOpen, scaleToggle);
+      if (!isOpen) setLangSubpanelOpen(false);
+      setScaleSubpanelOpen(!isOpen);
       return;
     }
 
     const scaleReset = target?.closest<HTMLButtonElement>("[data-scale-reset]");
     if (scaleReset) {
       setPageScale(DEFAULT_PAGE_SCALE);
+      return;
+    }
+
+    const motionBtn = target?.closest<HTMLButtonElement>("[data-motion-toggle]");
+    if (motionBtn) {
+      const nextPaused = !document.documentElement.classList.contains("motion-paused");
+      document.documentElement.classList.toggle("motion-paused", nextPaused);
+      safeSet(PAUSE_KEY, String(nextPaused));
+      applyStoredModes();
+      window.dispatchEvent(new CustomEvent("shlongeeland:pause", { detail: nextPaused }));
+      return;
+    }
+
+    const shuffleBtn = target?.closest<HTMLButtonElement>("[data-wormhole-shuffle]");
+    if (shuffleBtn) {
+      shuffleBtn.classList.remove("is-spinning");
+      void shuffleBtn.offsetWidth;
+      shuffleBtn.classList.add("is-spinning");
+      window.dispatchEvent(new CustomEvent("shlongeeland:shuffle"));
       return;
     }
 
@@ -269,14 +360,11 @@ export function mountArcaneControls(): void {
       return;
     }
 
-    if (!target?.closest("[data-scale-popover]")) {
-      setScalePopoverOpen(false);
-    }
-    if (!target?.closest("[data-lang-popover]")) {
-      setLangPopoverOpen(false);
+    if (!target?.closest("[data-settings-popover]")) {
+      setSettingsPopoverOpen(false);
     }
   });
 
-  document.addEventListener("astro:after-swap", applyStoredModes);
-  document.addEventListener("astro:page-load", applyStoredModes);
+  document.addEventListener("astro:after-swap", closeMenusOnSwap);
+  document.addEventListener("astro:page-load", closeMenusOnSwap);
 }

@@ -5,6 +5,7 @@ attribute vec2 uv;
 attribute float pindex;
 attribute vec2 offset;
 attribute float angle;
+attribute float aWeight;
 
 uniform mat4 modelViewMatrix;
 uniform mat4 projectionMatrix;
@@ -13,10 +14,8 @@ uniform float uRandom;
 uniform float uDepth;
 uniform float uSize;
 uniform vec2 uTextureSize;
-uniform sampler2D uTexture;
 uniform sampler2D uTouch;
 
-varying vec2 vPUv;
 varying vec2 vUv;
 varying float vShimmer;
 
@@ -27,11 +26,7 @@ float hash1(float n) {
 void main() {
   vUv = uv;
   vec2 puv = offset / uTextureSize;
-  vPUv = puv;
 
-  vec4 color = texture2D(uTexture, puv);
-  float grey = color.r * 0.33 + color.g * 0.33 + color.b * 0.33;
-  
   vec3 displaced = vec3(offset, 0.0);
   float r1 = hash1(pindex);
   float r2 = hash1(offset.x + pindex * 1.37);
@@ -48,7 +43,7 @@ void main() {
   displaced.z += touch * 22.0 * rndz;
 
   vShimmer = 0.78 + 0.22 * sin(uTime * 2.2 + pindex * 0.73);
-  float particleSize = (1.0 + wave * 0.65) * max(grey, 0.75) * uSize;
+  float particleSize = (1.0 + wave * 0.65) * aWeight * uSize;
   displaced.xy += position.xy * particleSize;
 
   gl_Position = projectionMatrix * modelViewMatrix * vec4(displaced, 1.0);

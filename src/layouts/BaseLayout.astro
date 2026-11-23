@@ -6,9 +6,9 @@ import Seo, { type BreadcrumbItem } from "../components/Seo.astro";
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
 import ArcaneControls from "../components/ArcaneControls.astro";
-import LanguageMenu from "../components/LanguageMenu.astro";
+import SettingsMenu from "../components/SettingsMenu.astro";
 import { DEFAULT_LANG, LANG_STORAGE_KEY, LANGUAGES, type Lang } from "../i18n/ui";
-import { resolveLang, useTranslations } from "../i18n/utils";
+import { resolveLang } from "../i18n/utils";
 
 export interface Props {
   title: string;
@@ -42,7 +42,6 @@ const {
   breadcrumbs = [],
 } = Astro.props;
 
-const t = useTranslations(lang);
 const supportedLocales = [...LANGUAGES];
 const nonDefaultLocales = LANGUAGES.filter((l) => l !== DEFAULT_LANG);
 ---
@@ -123,10 +122,12 @@ const nonDefaultLocales = LANGUAGES.filter((l) => l !== DEFAULT_LANG);
           let savedTheme = null;
           let savedScale = null;
           let isCrystal = false;
+          let isPaused = false;
           try {
             savedTheme = localStorage.getItem("theme");
             savedScale = localStorage.getItem("shlongeeland-scale-v2");
             isCrystal = localStorage.getItem("shlongeeland-crystal") === "true";
+            isPaused = localStorage.getItem("shlongeeland-paused") === "true";
           } catch {}
 
           const isDark =
@@ -139,6 +140,7 @@ const nonDefaultLocales = LANGUAGES.filter((l) => l !== DEFAULT_LANG);
 
           document.documentElement.classList.toggle("dark", isDark);
           document.documentElement.classList.toggle("crystal", isCrystal);
+          document.documentElement.classList.toggle("motion-paused", isPaused);
         };
         apply();
         document.addEventListener("astro:after-swap", apply);
@@ -162,10 +164,10 @@ const nonDefaultLocales = LANGUAGES.filter((l) => l !== DEFAULT_LANG);
         transition:animate={fade({ duration: "0.45s" })}
       >
         <div class="home-arcane-dock">
-          <ArcaneControls showCrystal={false} lang={lang} />
+          <ArcaneControls showCrystal={false} showScale={false} lang={lang} />
         </div>
         <slot />
-        <LanguageMenu lang={lang} localePaths={localePaths} />
+        <SettingsMenu lang={lang} localePaths={localePaths} showCrystal={false} showScale={false} />
       </main>
     ) : (
       <div
@@ -211,30 +213,7 @@ const nonDefaultLocales = LANGUAGES.filter((l) => l !== DEFAULT_LANG);
           <Footer lang={lang} />
         </div>
 
-        <LanguageMenu lang={lang} localePaths={localePaths} />
-
-        <div id="scale-popover" class="scale-popover" data-scale-popover hidden>
-          <div class="scale-popover__head">
-            <label for="page-scale-slider">{t("scale.label")}</label>
-            <strong data-scale-readout>1.35x</strong>
-          </div>
-          <input
-            id="page-scale-slider"
-            type="range"
-            min="0.7"
-            max="2.0"
-            step="0.05"
-            value="1.35"
-            data-scale-slider
-          />
-          <div class="scale-popover__foot">
-            <span>{t("scale.narrow")}</span>
-            <button type="button" class="clear-btn scale-reset-btn" data-scale-reset>
-              {t("scale.reset")}
-            </button>
-            <span>{t("scale.wide")}</span>
-          </div>
-        </div>
+        <SettingsMenu lang={lang} localePaths={localePaths} showCrystal showScale />
       </div>
     )}
 

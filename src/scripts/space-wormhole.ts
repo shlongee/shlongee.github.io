@@ -33,6 +33,9 @@ const LIGHT_PALETTES: WormholePalette[] = [
   { name: "Hacker Daybreak", deep: "#12291c", fog: "#578269", base: "#29e878", warp: "#75ffa8", accent: "#e0ffeb" },
 ];
 
+const WORMHOLE_RENDER_SCALE = 0.65;
+const MIN_FRAME_MS = 14.5;
+
 export function mountSpaceWormhole(): void {
   const canvas = document.querySelector<HTMLCanvasElement>("[data-space-wormhole]");
   if (!canvas) return;
@@ -46,7 +49,7 @@ export function mountSpaceWormhole(): void {
 
   const getInitialPalette = () =>
     isDarkTheme() ? DARK_PALETTES[darkIndex] : LIGHT_PALETTES[lightIndex];
-  
+
   const initial = getInitialPalette();
   let currentPalette = initial;
 
@@ -65,7 +68,7 @@ export function mountSpaceWormhole(): void {
       canvas,
       antialias: false,
       alpha: false,
-      powerPreference: "high-performance"
+      powerPreference: "default",
     });
   } catch {
     return;
@@ -111,6 +114,14 @@ export function mountSpaceWormhole(): void {
     targetColors.accent.set(palette.accent);
   };
 
+  const snapColors = () => {
+    tunnelUniforms.uColorDeep.value.copy(targetColors.deep);
+    tunnelUniforms.uColorFog.value.copy(targetColors.fog);
+    tunnelUniforms.uColorBase.value.copy(targetColors.base);
+    tunnelUniforms.uColorWarp.value.copy(targetColors.warp);
+    tunnelUniforms.uColorAccent.value.copy(targetColors.accent);
+  };
+
   const quadGeo = new THREE.PlaneGeometry(2, 2);
   const quadMat = new THREE.RawShaderMaterial({
     uniforms: tunnelUniforms,
@@ -123,7 +134,30 @@ export function mountSpaceWormhole(): void {
   const bgCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
   bgScene.add(new THREE.Mesh(quadGeo, quadMat));
 
-  // Procedural twinkling stars
+  const bgTarget = new THREE.WebGLRenderTarget(1, 1, {
+    minFilter: THREE.LinearFilter,
+    magFilter: THREE.LinearFilter,
+    depthBuffer: false,
+    stencilBuffer: false,
+  });
+  const blitMat = new THREE.RawShaderMaterial({
+    uniforms: { uMap: { value: bgTarget.texture } },
+    vertexShader: tunnelVertex,
+    fragmentShader: `
+      precision highp float;
+      uniform sampler2D uMap;
+      varying vec2 vUv;
+      void main() {
+        gl_FragColor = texture2D(uMap, vUv);
+      }
+    `,
+    depthTest: false,
+    depthWrite: false,
+  });
+  const blitScene = new THREE.Scene();
+  blitScene.add(new THREE.Mesh(quadGeo, blitMat));
+
+  // Procedural twinkling stars (animated on GPU via uStarOffset)
   const starCount = 550;
   const starPositions = new Float32Array(starCount * 3);
   const starColors = new Float32Array(starCount * 3);
@@ -161,6 +195,7 @@ export function mountSpaceWormhole(): void {
     uTime: tunnelUniforms.uTime,
     uWarp: tunnelUniforms.uWarp,
     uFogColor: tunnelUniforms.uColorFog,
+    uStarOffset: { value: 0 },
   };
 
   const starMat = new THREE.RawShaderMaterial({
@@ -174,7 +209,7 @@ export function mountSpaceWormhole(): void {
   const stars = new THREE.Points(starGeo, starMat);
   scene.add(stars);
 
-    // --- 3D Bioluminescent Aurora Mushrooms ---
+  // --- 3D Bioluminescent Aurora Mushrooms ---
   const capPoints = [
     new THREE.Vector2(0.0, 14.0),
     new THREE.Vector2(5.5, 13.0),
@@ -211,7 +246,7 @@ export function mountSpaceWormhole(): void {
     baseScale: number;
   }
 
-  const mushroomConfigs: Array<{ effect: MushroomEffect; color: string; label: string, labelRu: string }> = [
+  const mushroomConfigs: Array<{ effect: MushroomEffect; color: string; label: string; labelRu: string }> = [
     { effect: "aurora", color: "#4af2be", label: "✦ Aurora shift", labelRu: "✦ Сдвиг сияния" },
     { effect: "ripple", color: "#6ee2ff", label: "✦ Warp ripple", labelRu: "✦ Спазм червоточины" },
     { effect: "surge", color: "#c98eff", label: "✦ Star surge", labelRu: "✦ Звёздный рывок" },
@@ -265,7 +300,8 @@ export function mountSpaceWormhole(): void {
     rayTargets.push(capMesh, stemMesh);
 
     group.add(stemMesh, capMesh);
-    group.scale.setScalar(0.85 + Math.random() * 0.45);
+    const baseScale = 0.75 + Math.random() * 0.55;
+    group.scale.setScalar(baseScale);
     placeMushroomAtSpawn(group, -240 - index * 240);
     mushroomRoot.add(group);
 
@@ -286,15 +322,37 @@ export function mountSpaceWormhole(): void {
       ),
       popScale: 1,
       popping: false,
-      baseScale: 0.75 + Math.random() * 0.55,
+      baseScale,
     });
   });
   scene.add(mushroomRoot);
 
-  // Star surge boost (triggered by clicking the purple mushroom)
   let starSurge = 0;
   let pulseTimer = 0;
+  let warpTarget = 0;
+  let overrideWarp: number | null = null;
+  let paused = document.documentElement.classList.contains("motion-paused");
+  let rafId = 0;
+  let lastRender = performance.now();
+  let fpsFrames = 0;
+  let fpsLast = performance.now();
+
+  const renderScene = () => {
+    camera.position.x = tunnelUniforms.uPointer.value.x * 16;
+    camera.position.y = tunnelUniforms.uPointer.value.y * 10;
+    camera.lookAt(0, 0, -400);
+
+    renderer.autoClear = false;
+    renderer.setRenderTarget(bgTarget);
+    renderer.render(bgScene, bgCamera);
+    renderer.setRenderTarget(null);
+    renderer.clear();
+    renderer.render(blitScene, bgCamera);
+    renderer.render(scene, camera);
+  };
+
   const triggerPulse = () => {
+    if (paused) return;
     overrideWarp = null;
     warpTarget = 0.2;
     if (pulseTimer) window.clearTimeout(pulseTimer);
@@ -303,10 +361,10 @@ export function mountSpaceWormhole(): void {
     }, 360);
   };
 
-  // Raycaster for hovering & clicking 3D mushrooms without blocking page elements
   const raycaster = new THREE.Raycaster();
   const ndc = new THREE.Vector2();
   let hoveredMushroomIdx = -1;
+  let lastRaycastAt = 0;
 
   const updateNdc = (clientX: number, clientY: number) => {
     ndc.set(
@@ -316,14 +374,17 @@ export function mountSpaceWormhole(): void {
   };
 
   const spawnDomBurst = (cx: number, cy: number, color: string, label: string) => {
+    const clampedX = Math.min(Math.max(76, cx), window.innerWidth - 76);
+    const clampedY = Math.max(40, cy);
+
     const whisper = document.createElement("span");
     whisper.className = "mushroom-whisper";
     whisper.textContent = label;
-    whisper.style.left = `${cx}px`;
-    whisper.style.top = `${cy - 12}px`;
+    whisper.style.left = `${clampedX}px`;
+    whisper.style.top = `${clampedY - 12}px`;
     whisper.style.color = color;
     document.body.append(whisper);
-    window.setTimeout(() => whisper.remove(), 20000);
+    window.setTimeout(() => whisper.remove(), 1150);
 
     for (let i = 0; i < 12; i++) {
       const spore = document.createElement("span");
@@ -344,14 +405,21 @@ export function mountSpaceWormhole(): void {
   const isBlockedElement = (target: EventTarget | null) =>
     Boolean((target as Element | null)?.closest(".codex-sheet, a, button, input, aside"));
 
+  const isFinePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+
   const onMushroomHover = (e: PointerEvent) => {
-    if (!isFinePointer || isBlockedElement(e.target)) {
+    if (paused || !isFinePointer || isBlockedElement(e.target)) {
       if (hoveredMushroomIdx !== -1) {
         hoveredMushroomIdx = -1;
         document.body.style.cursor = "";
       }
       return;
     }
+
+    const now = performance.now();
+    if (now - lastRaycastAt < 50) return;
+    lastRaycastAt = now;
+
     updateNdc(e.clientX, e.clientY);
     raycaster.setFromCamera(ndc, camera);
     const hits = raycaster.intersectObjects(rayTargets, false);
@@ -363,7 +431,7 @@ export function mountSpaceWormhole(): void {
   };
 
   const onMushroomClick = (e: MouseEvent) => {
-    if (isBlockedElement(e.target)) return;
+    if (paused || isBlockedElement(e.target)) return;
     updateNdc(e.clientX, e.clientY);
     raycaster.setFromCamera(ndc, camera);
     const hits = raycaster.intersectObjects(rayTargets, false);
@@ -386,13 +454,6 @@ export function mountSpaceWormhole(): void {
   document.addEventListener("click", onMushroomClick);
 
   const targetPointer = new THREE.Vector2();
-  let warpTarget = 0;
-  let overrideWarp: number | null = null;
-  let paused = false;
-  let rafId = 0;
-  let last = performance.now();
-  let fpsFrames = 0;
-  let fpsLast = performance.now();
 
   const resize = () => {
     const width = window.innerWidth;
@@ -400,15 +461,19 @@ export function mountSpaceWormhole(): void {
     const pr = Math.min(window.devicePixelRatio || 1, 1.5);
     renderer.setPixelRatio(pr);
     renderer.setSize(width, height, false);
+    bgTarget.setSize(
+      Math.max(1, Math.round(width * pr * WORMHOLE_RENDER_SCALE)),
+      Math.max(1, Math.round(height * pr * WORMHOLE_RENDER_SCALE)),
+    );
     tunnelUniforms.uResolution.value.set(width, height);
     starUniforms.uPixelRatio.value = pr;
     camera.aspect = width / Math.max(1, height);
     camera.updateProjectionMatrix();
+    if (paused || reducedMotion) renderScene();
   };
 
-  const isFinePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
   const onPointerMove = (e: PointerEvent) => {
-    if (!isFinePointer) return;
+    if (!isFinePointer || paused) return;
     targetPointer.set(
       (e.clientX / Math.max(1, window.innerWidth) - 0.5) * 2,
       -(e.clientY / Math.max(1, window.innerHeight) - 0.5) * 2,
@@ -416,6 +481,7 @@ export function mountSpaceWormhole(): void {
   };
 
   const onWarp = () => {
+    if (paused) return;
     overrideWarp = null;
     warpTarget = 1;
   };
@@ -423,83 +489,118 @@ export function mountSpaceWormhole(): void {
   const onPageLoad = () => {
     overrideWarp = null;
     warpTarget = 0;
+    if (paused || reducedMotion) {
+      tunnelUniforms.uWarp.value = 0;
+      renderScene();
+    }
   };
 
   const onThemeSync = () => {
     const palette = isDarkTheme() ? DARK_PALETTES[darkIndex] : LIGHT_PALETTES[lightIndex];
     applyTargetPalette(palette);
-    publishPalette(palette)
+    publishPalette(palette);
     devHud?.syncFromTargets();
+    if (paused || reducedMotion) {
+      snapColors();
+      renderScene();
+    }
   };
 
   const onShuffle = () => {
     if (isDarkTheme()) {
       darkIndex = (darkIndex + 1) % DARK_PALETTES.length;
       applyTargetPalette(DARK_PALETTES[darkIndex]);
-      publishPalette(DARK_PALETTES[darkIndex])
+      publishPalette(DARK_PALETTES[darkIndex]);
     } else {
       lightIndex = (lightIndex + 1) % LIGHT_PALETTES.length;
       applyTargetPalette(LIGHT_PALETTES[lightIndex]);
-      publishPalette(LIGHT_PALETTES[lightIndex])
+      publishPalette(LIGHT_PALETTES[lightIndex]);
     }
     devHud?.syncFromTargets();
+    if (paused || reducedMotion) {
+      snapColors();
+      renderScene();
+    }
+  };
+
+  const setPausedState = (nextPaused: boolean, fromHud = false) => {
+    paused = nextPaused;
+    if (paused) {
+      if (hoveredMushroomIdx !== -1) {
+        hoveredMushroomIdx = -1;
+        document.body.style.cursor = "";
+      }
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+        rafId = 0;
+      }
+      renderScene();
+      devHud?.updateFps(0);
+    } else if (!reducedMotion && !document.hidden) {
+      lastRender = performance.now();
+      fpsFrames = 0;
+      fpsLast = lastRender;
+      if (!rafId) rafId = requestAnimationFrame(animate);
+    }
+    if (!fromHud) devHud?.syncPause(paused);
   };
 
   const animate = (now: number) => {
-    const dt = Math.min(0.05, (now - last) / 1000);
-    last = now;
-
-    if (!paused && !reducedMotion) {
-      starSurge = Math.max(0, starSurge - dt * 0.9);
-      const speed = 42 + tunnelUniforms.uWarp.value * 950 + starSurge * 280;
-      const pos = starGeo.getAttribute("position") as THREE.BufferAttribute;
-      for (let i = 0; i < starCount; i++) {
-        let z = pos.getZ(i) + speed * dt;
-        if (z > 100) z = -1400;
-        pos.setZ(i, z);
-      }
-      pos.needsUpdate = true;
-
-      const tSec = tunnelUniforms.uTime.value;
-      mushrooms.forEach((m, i) => {
-        const hoverTarget = i === hoveredMushroomIdx ? 1 : 0;
-        const curHover = m.capMat.uniforms.uHover.value as number;
-        const nextHover = curHover + (hoverTarget - curHover) * Math.min(1, dt * 8);
-        m.capMat.uniforms.uHover.value = nextHover;
-        m.stemMat.uniforms.uHover.value = nextHover;
-
-        m.group.position.z += speed * 0.82 * m.speedMul * dt;
-        m.group.position.x += Math.sin(tSec * 0.7 + m.phase) * 14 * dt;
-        m.group.position.y += Math.cos(tSec * 0.85 + m.phase) * 12 * dt;
-
-        m.group.rotation.x += m.rotSpeed.x * dt;
-        m.group.rotation.y += m.rotSpeed.y * dt;
-        m.group.rotation.z += m.rotSpeed.z * dt;
-
-        m.group.scale.setScalar(m.baseScale * m.popScale);
-
-        if (m.popping) {
-          m.popScale -= dt * 3.8;
-          m.group.rotation.y += dt * 14;
-          if (m.popScale <= 0.02) {
-            m.popping = false;
-            m.popScale = 0.05;
-            placeMushroomAtSpawn(m.group, -1300);
-          }
-        } else {
-          m.popScale += (1 - m.popScale) * Math.min(1, dt * 4);
-        }
-        m.group.scale.setScalar(m.popScale);
-
-        if (m.group.position.z > 95) {
-          placeMushroomAtSpawn(m.group, -1350);
-          m.popScale = 0.2;
-        }
-      });
-      tunnelUniforms.uTime.value += dt;
+    if (paused || reducedMotion) {
+      rafId = 0;
+      return;
     }
 
-    // Smooth color transitions for theme toggle and shuffle
+    if (now - lastRender < MIN_FRAME_MS) {
+      rafId = requestAnimationFrame(animate);
+      return;
+    }
+
+    const dt = Math.min(0.05, (now - lastRender) / 1000);
+    lastRender = now;
+
+    starSurge = Math.max(0, starSurge - dt * 0.9);
+    const speed = 42 + tunnelUniforms.uWarp.value * 950 + starSurge * 280;
+    starUniforms.uStarOffset.value = (starUniforms.uStarOffset.value + speed * dt) % 1500;
+
+    const tSec = tunnelUniforms.uTime.value;
+    for (let i = 0; i < mushrooms.length; i++) {
+      const m = mushrooms[i];
+      const hoverTarget = i === hoveredMushroomIdx ? 1 : 0;
+      const curHover = m.capMat.uniforms.uHover.value as number;
+      const nextHover = curHover + (hoverTarget - curHover) * Math.min(1, dt * 8);
+      m.capMat.uniforms.uHover.value = nextHover;
+      m.stemMat.uniforms.uHover.value = nextHover;
+
+      m.group.position.z += speed * 0.82 * m.speedMul * dt;
+      m.group.position.x += Math.sin(tSec * 0.7 + m.phase) * 14 * dt;
+      m.group.position.y += Math.cos(tSec * 0.85 + m.phase) * 12 * dt;
+
+      m.group.rotation.x += m.rotSpeed.x * dt;
+      m.group.rotation.y += m.rotSpeed.y * dt;
+      m.group.rotation.z += m.rotSpeed.z * dt;
+
+      if (m.popping) {
+        m.popScale -= dt * 3.8;
+        m.group.rotation.y += dt * 14;
+        if (m.popScale <= 0.02) {
+          m.popping = false;
+          m.popScale = 0.05;
+          placeMushroomAtSpawn(m.group, -1300);
+        }
+      } else {
+        m.popScale += (1 - m.popScale) * Math.min(1, dt * 4);
+      }
+
+      if (m.group.position.z > 95) {
+        placeMushroomAtSpawn(m.group, -1350);
+        m.popScale = 0.2;
+      }
+
+      m.group.scale.setScalar(m.baseScale * m.popScale);
+    }
+    tunnelUniforms.uTime.value += dt;
+
     const colorRate = Math.min(1, dt * 2.4);
     tunnelUniforms.uColorDeep.value.lerp(targetColors.deep, colorRate);
     tunnelUniforms.uColorFog.value.lerp(targetColors.fog, colorRate);
@@ -509,20 +610,11 @@ export function mountSpaceWormhole(): void {
 
     const activeWarp = overrideWarp ?? warpTarget;
     tunnelUniforms.uWarp.value += (activeWarp - tunnelUniforms.uWarp.value) * Math.min(1, dt * 5);
-    tunnelUniforms.uPointer.value.lerp(targetPointer, Math.min(1, dt * 4)); 
+    tunnelUniforms.uPointer.value.lerp(targetPointer, Math.min(1, dt * 4));
 
-    camera.position.x = tunnelUniforms.uPointer.value.x * 16;
-    camera.position.y = tunnelUniforms.uPointer.value.y * 10;
-    camera.lookAt(0, 0, -400);
+    renderScene();
 
-    renderer.autoClear = false;
-    renderer.clear();
-    renderer.render(bgScene, bgCamera);
-    renderer.render(scene, camera);
-
-    if (!reducedMotion) {
-      rafId = requestAnimationFrame(animate);
-    }
+    rafId = requestAnimationFrame(animate);
 
     if (devHud) {
       fpsFrames += 1;
@@ -534,28 +626,47 @@ export function mountSpaceWormhole(): void {
     }
   };
 
-  // DEV SHADER TUNER (stripped completely in `npm run build`)
   let devHud: {
-  dispose: () => void;
-  syncFromTargets: () => void;
-  updateFps: (fps: number) => void;
+    dispose: () => void;
+    syncFromTargets: () => void;
+    syncPause: (isPaused: boolean) => void;
+    updateFps: (fps: number) => void;
   } | null = null;
   if (import.meta.env.DEV) {
-     devHud = createDevHud(tunnelUniforms, targetColors, {
-       onWarpChange: (v) => { overrideWarp = v; },
-       onPauseToggle: (isPaused) => { paused = isPaused; },
-       onStarsToggle: (visible) => { stars.visible = visible; },
-       onShuffle,
-       onReset: () => {
-         tunnelUniforms.uSpeed.value = 0.42;
-         tunnelUniforms.uSwirl.value = 1.0;
-         tunnelUniforms.uDensity.value = 0.7;
-         tunnelUniforms.uSplit.value = 0.0;
-         overrideWarp = null;
-         onThemeSync();
-       },
-     });
-    
+    devHud = createDevHud(
+      tunnelUniforms,
+      targetColors,
+      paused,
+      {
+        onWarpChange: (v) => {
+          overrideWarp = v;
+          if (paused) {
+            tunnelUniforms.uWarp.value = v ?? warpTarget;
+            renderScene();
+          }
+        },
+        onPauseToggle: (isPaused) => {
+          setPausedState(isPaused, true);
+        },
+        onStarsToggle: (visible) => {
+          stars.visible = visible;
+          if (paused) renderScene();
+        },
+        onUniformEdit: () => {
+          if (paused) renderScene();
+        },
+        onShuffle,
+        onReset: () => {
+          tunnelUniforms.uSpeed.value = 0.42;
+          tunnelUniforms.uSwirl.value = 1.0;
+          tunnelUniforms.uDensity.value = 0.7;
+          tunnelUniforms.uSplit.value = 0.0;
+          overrideWarp = null;
+          onThemeSync();
+        },
+      },
+    );
+
     if (import.meta.hot) {
       import.meta.hot.accept(
         [
@@ -589,6 +700,7 @@ export function mountSpaceWormhole(): void {
               m.stemMat.needsUpdate = true;
             }
           }
+          if (paused) renderScene();
         },
       );
     }
@@ -601,12 +713,15 @@ export function mountSpaceWormhole(): void {
   window.addEventListener("shlongeeland:pulse", triggerPulse);
   window.addEventListener("shlongeeland:theme", onThemeSync);
   window.addEventListener("shlongeeland:shuffle", onShuffle);
+  window.addEventListener("shlongeeland:pause", (e) => {
+    setPausedState(Boolean((e as CustomEvent<boolean>).detail));
+  });
   document.addEventListener("astro:page-load", onPageLoad);
   document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) {
-      last = performance.now();
-      if (!rafId && !reducedMotion) rafId = requestAnimationFrame(animate);
-    } else if (rafId) {
+    if (!document.hidden && !paused && !reducedMotion) {
+      lastRender = performance.now();
+      if (!rafId) rafId = requestAnimationFrame(animate);
+    } else if (document.hidden && rafId) {
       cancelAnimationFrame(rafId);
       rafId = 0;
     }
@@ -614,10 +729,10 @@ export function mountSpaceWormhole(): void {
   document.addEventListener("astro:after-swap", () => {
     publishPalette(currentPalette);
   });
-  document.addEventListener("astro:page-load", onPageLoad);
 
-  if (reducedMotion) {
-    requestAnimationFrame(animate);
+  if (paused || reducedMotion) {
+    renderScene();
+    devHud?.updateFps(0);
   } else {
     rafId = requestAnimationFrame(animate);
   }
@@ -644,10 +759,12 @@ function createDevHud(
     warp: THREE.Color;
     accent: THREE.Color;
   },
+  initialPaused: boolean,
   callbacks: {
     onWarpChange: (value: number | null) => void;
     onPauseToggle: (paused: boolean) => void;
     onStarsToggle: (visible: boolean) => void;
+    onUniformEdit: () => void;
     onShuffle: () => void;
     onReset: () => void;
   },
@@ -676,9 +793,7 @@ function createDevHud(
   const saveState = () => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch {
-      // Ignore storage errors
-    }
+    } catch {}
   };
 
   const panel = document.createElement("aside");
@@ -688,6 +803,9 @@ function createDevHud(
     left: ${state.x}px;
     z-index: 9999;
     width: 272px;
+    max-width: calc(100vw - 16px);
+    max-height: calc(100dvh - 16px);
+    overflow-y: auto;
     border-radius: 10px;
     background: rgba(10, 12, 20, 0.9);
     color: #eee;
@@ -698,7 +816,6 @@ function createDevHud(
     overflow: hidden;
   `;
 
-  // --- Draggable Header + FPS Badge ---
   const header = document.createElement("div");
   header.style.cssText = css`
     display: flex;
@@ -757,7 +874,6 @@ function createDevHud(
 
   header.append(titleWrap, minimizeBtn);
 
-  // --- Collapsible Body ---
   const body = document.createElement("div");
   body.style.cssText = css`
     padding: 10px 12px 12px;
@@ -838,7 +954,6 @@ function createDevHud(
     { passive: true, signal },
   );
 
-  // --- Sliders (tracked so Reset updates them cleanly) ---
   const sliderSyncs: Array<() => void> = [];
   const makeSlider = (
     label: string,
@@ -881,7 +996,6 @@ function createDevHud(
     return row;
   };
 
-  // --- Color Pickers (update both targetColors & uniform immediately!) ---
   const colorSyncs: Array<() => void> = [];
   const makeColor = (
     label: string,
@@ -917,6 +1031,7 @@ function createDevHud(
       () => {
         target.set(input.value);
         uniform.set(input.value);
+        callbacks.onUniformEdit();
       },
       { signal },
     );
@@ -941,7 +1056,6 @@ function createDevHud(
     return b;
   };
 
-  // --- Warp Row (Slider + Auto Release) ---
   let warpOverride = 0;
   let warpLocked = false;
   const warpRow = makeSlider(
@@ -957,8 +1071,7 @@ function createDevHud(
     },
   );
 
-  // --- Action Buttons ---
-  let paused = false;
+  let paused = initialPaused;
   let starsVisible = true;
   let uiHidden = false;
 
@@ -972,7 +1085,7 @@ function createDevHud(
       });
   };
 
-  const pauseBtn = makeBtn("Pause", () => {
+  const pauseBtn = makeBtn(paused ? "Resume" : "Pause", () => {
     paused = !paused;
     pauseBtn.textContent = paused ? "Resume" : "Pause";
     callbacks.onPauseToggle(paused);
@@ -994,7 +1107,7 @@ function createDevHud(
     callbacks.onShuffle();
   });
 
-  const warpAutoBtn = makeBtn("Warp: Auto", () => {
+  const warpAutoBtn = makeBtn("Test Warp", () => {
     if (warpLocked) {
       warpLocked = false;
       warpOverride = 0;
@@ -1008,7 +1121,6 @@ function createDevHud(
     }
     warpAutoBtn.textContent = warpLocked ? "Release Warp" : "Test Warp";
   });
-  warpAutoBtn.textContent = "Test Warp";
 
   const resetBtn = makeBtn("Reset", () => {
     warpLocked = false;
@@ -1043,15 +1155,19 @@ function createDevHud(
     warpRow,
     makeSlider("Speed", 0, 2, 0.05, () => uniforms.uSpeed.value, (v) => {
       uniforms.uSpeed.value = v;
+      callbacks.onUniformEdit();
     }),
     makeSlider("Swirl", -3, 3, 0.05, () => uniforms.uSwirl.value, (v) => {
       uniforms.uSwirl.value = v;
+      callbacks.onUniformEdit();
     }),
     makeSlider("Density", 0.4, 1.8, 0.02, () => uniforms.uDensity.value, (v) => {
       uniforms.uDensity.value = v;
+      callbacks.onUniformEdit();
     }),
     makeSlider("A/B Split", 0, 1, 0.01, () => uniforms.uSplit.value, (v) => {
       uniforms.uSplit.value = v;
+      callbacks.onUniformEdit();
     }),
     makeColor("Deep Sky", targetColors.deep, uniforms.uColorDeep.value),
     makeColor("Mist Fog", targetColors.fog, uniforms.uColorFog.value),
@@ -1070,6 +1186,10 @@ function createDevHud(
   return {
     syncFromTargets: () => {
       colorSyncs.forEach((s) => s());
+    },
+    syncPause: (isPaused: boolean) => {
+      paused = isPaused;
+      pauseBtn.textContent = paused ? "Resume" : "Pause";
     },
     updateFps: (fps: number) => {
       fpsBadge.textContent = `${fps} fps`;

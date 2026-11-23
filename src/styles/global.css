@@ -1,3 +1,6 @@
+/* ==========================================================================
+   1. Design Tokens & Themes
+   ========================================================================== */
 :root {
   view-transition-name: none;
   --bg: #02060d;
@@ -31,8 +34,18 @@ html.dark {
   --rim-rgb: 140, 245, 255;
 }
 
-* {
+/* ==========================================================================
+   2. Base Reset & Typography
+   ========================================================================== */
+*,
+*::before,
+*::after {
   box-sizing: border-box;
+}
+
+html,
+body {
+  overflow-x: clip;
 }
 
 body {
@@ -42,7 +55,6 @@ body {
   color: var(--text);
   background: var(--bg);
   line-height: 1.62;
-  overflow-x: hidden;
 }
 
 button,
@@ -50,7 +62,12 @@ input {
   font-family: inherit;
 }
 
-h1, h2, h3, h4, h5, h6,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
 .post-card__link h2 {
   font-family: var(--font-display);
   letter-spacing: 0.02em;
@@ -71,7 +88,18 @@ a {
   color: var(--accent);
 }
 
-/* Global Persistent Wormhole */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   3. Persistent WebGL Wormhole & Vignette
+   ========================================================================== */
 .wormhole-global-bg {
   position: fixed;
   inset: 0;
@@ -94,7 +122,9 @@ a {
   );
 }
 
-/* Centered Manuscript Codex */
+/* ==========================================================================
+   4. Centered Manuscript Codex Shell & Crystal Mode
+   ========================================================================== */
 .codex-shell {
   position: relative;
   z-index: 2;
@@ -157,7 +187,7 @@ html.dark .codex-sheet {
     0 24px 60px rgba(0, 0, 0, 0.8);
 }
 
-/* Barely-visible Magical Doodles + Paper Grain */
+/* Subtle Magical Doodles + Paper Grain */
 .codex-sheet::before {
   content: "";
   position: absolute;
@@ -196,55 +226,6 @@ html.dark .codex-sheet::before {
   z-index: 20;
 }
 
-.scale-control {
-  position: relative;
-}
-
-.scale-popover {
-  position: fixed;
-  z-index: 50;
-  width: min(228px, calc(100vw - 24px));
-  padding: 0.8rem 0.9rem;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  background: var(--sheet-bg);
-  color: var(--text);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35), 0 0 22px rgba(var(--glow-rgb), 0.18);
-  display: grid;
-  gap: 0.55rem;
-  font-size: 0.88rem;
-}
-
-.scale-popover[hidden] {
-  display: none;
-}
-
-.scale-popover__head,
-.scale-popover__foot {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-}
-
-.scale-popover__foot {
-  font-size: 0.78rem;
-  color: var(--muted);
-}
-
-.scale-popover input[type="range"] {
-  width: 100%;
-  min-height: 28px;
-  accent-color: var(--accent);
-  touch-action: none;
-  cursor: pointer;
-}
-
-.scale-reset-btn {
-  padding: 0.25rem 0.65rem;
-  font-size: 0.78rem;
-}
-
 /* Android scroll fix */
 .codex-sheet a,
 .codex-sheet button,
@@ -273,7 +254,9 @@ html.dark.crystal .codex-sheet {
     0 24px 60px rgba(0, 0, 0, 0.78);
 }
 
-/* Header: Shared vertical margin rail */
+/* ==========================================================================
+   5. Header, Navigation & Arcane Controls
+   ========================================================================== */
 header {
   padding: clamp(0.8rem, 2vw, 1.05rem) var(--sheet-pad-x) clamp(0.75rem, 1.8vw, 0.9rem);
   border-bottom: 1px solid var(--border);
@@ -384,9 +367,10 @@ header {
 
 .home-arcane-dock {
   position: fixed;
-  top: clamp(0.9rem, 2.5vw, 1.4rem);
-  right: clamp(0.9rem, 2.5vw, 1.4rem);
+  top: max(clamp(0.75rem, 2.5vw, 1.4rem), env(safe-area-inset-top));
+  right: max(clamp(0.75rem, 2.5vw, 1.4rem), env(safe-area-inset-right));
   z-index: 10;
+  max-width: calc(100vw - 1.5rem);
 }
 
 .arcane-btn {
@@ -397,13 +381,19 @@ header {
   padding: 0;
   border-radius: 999px;
   border: 1px solid rgba(72, 224, 180, 0.45);
-  background: rgba(14, 20, 34, 0.45);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(14, 20, 34, 0.72);
   color: #e9fff7;
   cursor: pointer;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 4px 14px rgba(0, 0, 0, 0.35);
   transition: transform 140ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+/* Only pay GPU backdrop-filter cost where the surface behind the button is actually translucent */
+html.immersive .arcane-btn,
+html.crystal .arcane-btn {
+  background: rgba(14, 20, 34, 0.45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 @media (pointer: coarse) {
@@ -414,7 +404,7 @@ header {
 }
 
 html:not(.dark):not(.immersive) .arcane-btn {
-  background: rgba(255, 253, 246, 0.85);
+  background: rgba(255, 253, 246, 0.88);
   color: #0f5f57;
   border-color: rgba(15, 118, 110, 0.35);
   box-shadow: 0 2px 10px rgba(20, 40, 50, 0.14), 0 0 14px rgba(16, 185, 129, 0.18);
@@ -424,40 +414,394 @@ html:not(.dark):not(.immersive) .arcane-btn {
   transform: scale(0.94);
 }
 
-.arcane-btn--crystal[aria-pressed="true"] {
-  border-color: #0ea5e9;
-  color: #0284c7;
-  box-shadow: inset 0 0 12px rgba(14, 165, 233, 0.22), 0 0 16px rgba(14, 165, 233, 0.38);
-}
-
-html.dark .arcane-btn--crystal[aria-pressed="true"] {
-  border-color: #4ad8ff;
-  color: #7ee8ff;
-  box-shadow: inset 0 0 12px rgba(74, 216, 255, 0.28), 0 0 16px rgba(74, 216, 255, 0.4);
-}
-
-/* Fantasy Theme Sigil Morph */
+/* ==========================================================================
+   6. Sigil, Shuffle, Pause & Arcane Astrolabe Gear Animations
+   ========================================================================== */
+/* Theme Solar / Crescent Sigil */
 .arcane-sigil {
   transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
 }
+
 .sigil-sun,
 .sigil-moon {
   transform-origin: 16px 16px;
   transition: opacity 260ms ease, transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
 }
+
 html.dark .sigil-sun { opacity: 0; transform: scale(0.4) rotate(-60deg); }
 html.dark .sigil-moon { opacity: 1; transform: scale(1) rotate(0deg); }
 html:not(.dark) .sigil-sun { opacity: 1; transform: scale(1) rotate(0deg); }
 html:not(.dark) .sigil-moon { opacity: 0; transform: scale(0.4) rotate(60deg); }
 
+/* Wormhole Shuffle Spin */
 @keyframes shuffle-spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
 .arcane-btn--shuffle.is-spinning svg {
   animation: shuffle-spin 480ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+/* Pause / Play Sigil */
+.sigil-pause,
+.sigil-play {
+  transform-origin: 12px 12px;
+  transition: opacity 200ms ease, transform 240ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.sigil-pause {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.sigil-play {
+  opacity: 0;
+  transform: scale(0.55);
+}
+
+html.motion-paused .sigil-pause,
+.arcane-btn--motion[aria-pressed="true"] .sigil-pause {
+  opacity: 0;
+  transform: scale(0.55);
+}
+
+html.motion-paused .sigil-play,
+.arcane-btn--motion[aria-pressed="true"] .sigil-play {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.arcane-btn--motion[aria-pressed="true"] {
+  border-color: #d97706;
+  color: #b45309;
+  box-shadow: inset 0 0 12px rgba(245, 158, 11, 0.2), 0 0 16px rgba(245, 158, 11, 0.35);
+}
+
+html.dark .arcane-btn--motion[aria-pressed="true"],
+html.immersive .arcane-btn--motion[aria-pressed="true"] {
+  border-color: #fbbf24;
+  color: #fde68a;
+  box-shadow: inset 0 0 12px rgba(251, 191, 36, 0.25), 0 0 16px rgba(251, 191, 36, 0.38);
+}
+
+/* Arcane Astrolabe Gear Settings Button */
+.arcane-settings-sigil {
+  overflow: visible;
+}
+
+.settings-ring,
+.settings-gear,
+.settings-core {
+  transform-origin: 12px 12px;
+  transition:
+    transform 420ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 240ms ease,
+    color 200ms ease;
+}
+
+.settings-ring {
+  opacity: 0.55;
+}
+
+.settings-core {
+  opacity: 0.85;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .arcane-btn--settings:hover .settings-gear {
+    transform: rotate(45deg);
+  }
+  .arcane-btn--settings:hover .settings-ring {
+    transform: rotate(-30deg);
+    opacity: 0.92;
+  }
+  .arcane-btn--settings:hover .settings-core {
+    transform: scale(1.18) rotate(-45deg);
+    opacity: 1;
+  }
+}
+
+.arcane-btn--settings[aria-expanded="true"] {
+  border-color: var(--accent);
+  box-shadow: 0 0 18px rgba(var(--glow-rgb), 0.36);
+}
+
+.arcane-btn--settings[aria-expanded="true"] .settings-gear {
+  transform: rotate(90deg);
+}
+
+.arcane-btn--settings[aria-expanded="true"] .settings-core {
+  transform: scale(1.22) rotate(45deg);
+  color: var(--accent);
+  opacity: 1;
+}
+
+html.immersive .arcane-btn--settings[aria-expanded="true"] .settings-core {
+  color: #5cf2be;
+}
+
+.arcane-btn--settings[aria-expanded="true"] .settings-ring {
+  opacity: 0.95;
+  animation: settings-orbit 14s linear infinite;
+}
+
+@keyframes settings-orbit {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(-360deg); }
+}
+
+/* ==========================================================================
+   7. Folded Settings Popover & Sub-panels (Viewport-Clamped)
+   ========================================================================== */
+.settings-popover {
+  position: fixed;
+  z-index: 50;
+  width: min(272px, calc(100vw - 24px));
+  max-width: calc(100vw - 24px);
+  max-height: calc(100dvh - 24px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.45rem;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--sheet-bg);
+  color: var(--text);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.38), 0 0 24px rgba(var(--glow-rgb), 0.18);
+  display: grid;
+  gap: 0.28rem;
+}
+
+.settings-popover[hidden] {
+  display: none;
+}
+
+.settings-popover:not([hidden]) {
+  transform-origin: top right;
+  animation: settings-unfold 190ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+html.immersive .settings-popover {
+  background: rgba(12, 18, 32, 0.86);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  border-color: rgba(72, 224, 180, 0.45);
+  color: #e9fff7;
+}
+
+html.crystal .settings-popover {
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+}
+
+.settings-group {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.settings-item {
+  width: 100%;
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.45rem 0.65rem;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: inherit;
+  font-size: 0.92rem;
+  line-height: 1.25;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+
+@media (pointer: coarse) {
+  .settings-item {
+    min-height: 44px;
+  }
+}
+
+.settings-item:hover,
+.settings-item:focus-visible {
+  outline: none;
+  background: rgba(var(--glow-rgb), 0.12);
+  border-color: rgba(var(--glow-rgb), 0.36);
+}
+
+.settings-item[aria-expanded="true"],
+.settings-item[data-glass-toggle][aria-pressed="true"] {
+  background: rgba(var(--glow-rgb), 0.15);
+  border-color: rgba(var(--glow-rgb), 0.45);
+}
+
+.settings-item__icon {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  color: var(--accent);
+}
+
+html.immersive .settings-item__icon {
+  color: #5cf2be;
+}
+
+.settings-item__label {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+}
+
+.settings-item__value {
+  font-size: 0.82rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+html.immersive .settings-item__value {
+  color: rgba(233, 255, 247, 0.72);
+}
+
+.settings-item__chev {
+  font-size: 0.78rem;
+  opacity: 0.7;
+  transition: transform 180ms ease;
+}
+
+.settings-item[aria-expanded="true"] .settings-item__chev {
+  transform: rotate(180deg);
+}
+
+.settings-subpanel {
+  padding: 0.35rem 0.45rem 0.45rem;
+  margin-left: 0.35rem;
+  border-left: 2px solid var(--border);
+  display: grid;
+  gap: 0.25rem;
+}
+
+.settings-subpanel[hidden] {
+  display: none;
+}
+
+.settings-subpanel:not([hidden]) {
+  animation: settings-sub-unfold 170ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes settings-unfold {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes settings-sub-unfold {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.lang-code {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  line-height: 1;
+}
+
+.lang-option {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.45rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  color: inherit;
+  text-decoration: none;
+  font-size: 0.9rem;
+  line-height: 1.2;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+
+.lang-option:hover,
+.lang-option:focus-visible {
+  outline: none;
+  background: rgba(var(--glow-rgb), 0.14);
+  border-color: rgba(var(--glow-rgb), 0.4);
+}
+
+.lang-option.is-active {
+  background: rgba(var(--glow-rgb), 0.18);
+  border-color: rgba(var(--glow-rgb), 0.5);
+  color: var(--accent);
+  font-weight: 700;
+}
+
+html.immersive .lang-option.is-active {
+  color: #5cf2be;
+}
+
+.lang-option__code {
+  font-family: var(--font-display);
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  opacity: 0.75;
+  min-width: 1.6em;
+}
+
+.lang-option__name {
+  flex: 1;
+}
+
+.lang-option__mark {
+  font-size: 0.78rem;
+  opacity: 0.9;
+}
+
+.scale-panel {
+  gap: 0.5rem;
+  padding: 0.45rem 0.55rem 0.55rem;
+}
+
+.scale-panel input[type="range"] {
+  width: 100%;
+  min-width: 0;
+  min-height: 28px;
+  accent-color: var(--accent);
+  touch-action: none;
+  cursor: pointer;
+}
+
+.scale-popover__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.scale-reset-btn {
+  padding: 0.25rem 0.65rem;
+  font-size: 0.78rem;
+}
+
+/* ==========================================================================
+   8. Footer & Immersive Home Stage
+   ========================================================================== */
 .site-main {
   padding: clamp(1.25rem, 3.2vw, 2.25rem) var(--sheet-pad-x);
 }
@@ -470,298 +814,6 @@ html:not(.dark) .sigil-moon { opacity: 0; transform: scale(0.4) rotate(60deg); }
   text-align: center;
 }
 
-.home-micro-footer {
-  position: absolute;
-  z-index: 3;
-  left: 50%;
-  bottom: 0.85rem;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 0.55rem;
-  align-items: center;
-  font-size: 0.88rem;
-  letter-spacing: 0.06em;
-  color: rgba(235, 251, 255, 0.58);
-}
-.home-micro-footer a {
-  color: inherit;
-  text-decoration: none;
-}
-.home-micro-footer a:hover {
-  color: #ffffff;
-  text-shadow: 0 0 12px rgba(20, 216, 232, 0.65);
-}
-
-.arcane-viz {
-  margin: 1.55em 0;
-  padding: 0.95em 1.05em;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  box-shadow: 0 0 24px rgba(var(--glow-rgb), 0.12);
-}
-.arcane-viz__controls {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.7em 1.15em;
-  margin-bottom: 0.75em;
-  font-size: 0.88em;
-}
-.arcane-viz__controls label {
-  display: flex;
-  align-items: center;
-  gap: 0.45em;
-}
-.arcane-viz__controls input[type="range"] {
-  accent-color: var(--accent);
-}
-.arcane-viz__canvas {
-  width: 100%;
-  height: auto;
-  display: block;
-  border-radius: 8px;
-  border: 1px solid rgba(var(--glow-rgb), 0.28);
-}
-.arcane-viz__note {
-  margin: 0.6em 0 0;
-  font-size: 0.86em;
-  color: var(--muted);
-  text-align: center;
-}
-
-/* Global Illuminated Magic Styling */
-.site-main h1 {
-  color: #0b635a;
-  text-shadow: 0 0 16px rgba(16, 185, 129, 0.28), 0 0 28px rgba(56, 189, 248, 0.16);
-}
-html.dark .site-main h1 {
-  color: #9effdf;
-  text-shadow: 0 0 22px rgba(92, 242, 190, 0.35);
-}
-
-.site-main h2 {
-  margin: 2em 0 0.65em;
-  padding-bottom: 0.3em;
-  border-bottom: 1px solid var(--border);
-  color: #0369a1;
-  text-shadow: 0 0 14px rgba(14, 165, 233, 0.22);
-}
-.site-main h2::before {
-  content: "✦ ";
-  color: #d97706;
-  text-shadow: 0 0 10px rgba(245, 158, 11, 0.45);
-  font-size: 0.85em;
-}
-html.dark .site-main h2 {
-  color: #6ceeff;
-  text-shadow: 0 0 18px rgba(108, 238, 255, 0.28);
-}
-html.dark .site-main h2::before {
-  color: #ffd479;
-  text-shadow: 0 0 10px rgba(255, 212, 121, 0.65);
-}
-
-.site-main h3 {
-  margin: 1.6em 0 0.45em;
-  color: #6d28d9;
-  text-shadow: 0 0 12px rgba(139, 92, 246, 0.22);
-}
-html.dark .site-main h3 {
-  color: #d7a6ff;
-  text-shadow: 0 0 14px rgba(215, 166, 255, 0.28);
-}
-
-.site-main strong {
-  color: #b45309;
-  text-shadow: 0 0 10px rgba(245, 158, 11, 0.2);
-}
-html.dark .site-main strong {
-  color: #ffd584;
-  text-shadow: 0 0 10px rgba(255, 213, 132, 0.24);
-}
-
-.site-main em {
-  color: #7e22ce;
-  text-shadow: 0 0 10px rgba(168, 85, 247, 0.18);
-}
-html.dark .site-main em {
-  color: #e4b8ff;
-}
-
-.site-main a {
-  text-shadow: 0 0 10px rgba(16, 185, 129, 0.16);
-}
-html.dark .site-main a {
-  text-shadow: 0 0 12px rgba(92, 242, 190, 0.24);
-}
-
-/* Canonical 29rem Scaled Codex Container (100% Identical Line Wraps Everywhere) */
-.page-scale-frame {
-  width: 100%;
-  margin: 0 auto;
-}
-
-.page-scale-content {
-  width: 29rem;
-  font-size: 1.125rem;
-  line-height: 1.62;
-  transform-origin: top left;
-}
-
-.page-scale-content h1 {
-  font-size: 1.85em;
-  line-height: 1.2;
-  margin: 0 0 0.45em;
-}
-
-.page-scale-content h2 {
-  font-size: 1.44em;
-  line-height: 1.24;
-}
-
-.page-scale-content h3 {
-  font-size: 1.2em;
-  line-height: 1.28;
-}
-
-.page-scale-content p {
-  margin: 0 0 1.12em;
-}
-
-.page-lede {
-  color: var(--muted);
-  font-size: 1.12em;
-  line-height: 1.5;
-  margin: 0 0 1.25em;
-}
-
-/* Centered Editorial Headers */
-.post-header {
-  text-align: center;
-  margin-bottom: 1.85em;
-  padding-bottom: 1.15em;
-  border-bottom: 1px solid var(--border);
-}
-
-.post-header h1 {
-  margin: 0.3em 0 0.4em;
-}
-
-.post-description {
-  color: var(--muted);
-  font-size: 1.0em;
-  line-height: 1.5;
-  margin: 0 0 0.9em;
-}
-
-.post-header .tag-list {
-  justify-content: center;
-  margin-top: 0.8em;
-}
-
-.about-centered {
-  text-align: center;
-}
-
-.prose {
-  width: 100%;
-  margin: 0;
-  font-size: 1em;
-  line-height: 1.62;
-}
-
-.prose ul,
-.prose ol {
-  margin: 0 0 1.15em;
-  padding-left: 1.35em;
-}
-.prose li + li {
-  margin-top: 0.42em;
-}
-.prose ul li::marker {
-  content: "◈ ";
-  color: #0c7a6f;
-}
-html.dark .prose ul li::marker {
-  color: #5cf2be;
-}
-.prose ol li::marker {
-  font-weight: 700;
-  color: #7c3aed;
-}
-html.dark .prose ol li::marker {
-  color: #ffd479;
-}
-
-.marker::marker {
-  content: "◈ ";
-  color: #0c7a6f;
-}
-html.dark .marker::marker {
-  content: "◈ ";
-  color: #5cf2be;
-}
-
-.prose blockquote {
-  margin: 1.45em 0;
-  padding: 0.85em 1.15em;
-  border-left: 3px solid var(--accent);
-  border-radius: 0 10px 10px 0;
-  background: rgba(16, 185, 129, 0.08);
-  box-shadow: 0 0 18px rgba(16, 185, 129, 0.1);
-  font-style: italic;
-}
-
-.prose :not(pre) > code {
-  padding: 0.14em 0.42em;
-  border-radius: 6px;
-  font-size: 0.86em;
-  color: #0e7490;
-  background: rgba(14, 165, 233, 0.12);
-  border: 1px solid rgba(14, 165, 233, 0.28);
-  box-shadow: 0 0 10px rgba(14, 165, 233, 0.15);
-}
-html.dark .prose :not(pre) > code {
-  color: #8cf3ff;
-  background: rgba(34, 211, 238, 0.11);
-  border: 1px solid rgba(103, 232, 249, 0.28);
-  text-shadow: 0 0 8px rgba(103, 232, 249, 0.3);
-}
-
-.prose pre.astro-code {
-  font-size: 0.82em;
-  line-height: 1.5;
-  margin: 1.3em 0;
-  padding: 1.05em 1.15em;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  overflow-x: auto;
-  box-shadow: 0 6px 24px rgba(15, 118, 110, 0.14);
-}
-
-html.dark .prose pre.astro-code,
-html.dark .prose pre.astro-code span {
-  color: var(--shiki-dark) !important;
-  background-color: var(--shiki-dark-bg) !important;
-  font-style: var(--shiki-dark-font-style) !important;
-  font-weight: var(--shiki-dark-font-weight) !important;
-  text-decoration: var(--shiki-dark-text-decoration) !important;
-}
-
-html.dark .prose pre.astro-code {
-  border-color: rgba(110, 231, 183, 0.32);
-  box-shadow: inset 0 0 24px rgba(110, 231, 183, 0.06), 0 8px 28px rgba(0, 0, 0, 0.5);
-}
-
-.prose img {
-  max-width: 100%;
-  height: auto;
-  border-radius: 8px;
-  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.35);
-}
-
-/* Immersive Home */
 html.immersive,
 body.immersive {
   width: 100%;
@@ -787,11 +839,13 @@ body.immersive {
   z-index: 1;
   pointer-events: none;
 }
+
 .title-particles canvas {
   display: block;
   width: 100%;
   height: 100%;
 }
+
 .title-particles canvas[data-failed="true"] {
   display: none;
 }
@@ -801,12 +855,12 @@ body.immersive {
   z-index: 2;
   top: 44%;
   left: 50%;
-  width: min(92vw, 110rem);
+  width: min(90vw, 110rem);
   margin: 0;
   color: #e8fbff;
   font-family: var(--kejter), system-ui, sans-serif;
   font-weight: 700;
-  font-size: clamp(2.5rem, 13vw, 10rem);
+  font-size: clamp(2rem, 11.5vw, 10rem);
   line-height: 0.9;
   letter-spacing: 0.04em;
   text-align: center;
@@ -814,6 +868,7 @@ body.immersive {
   transform: translate(-50%, -50%);
   pointer-events: none;
 }
+
 .title-particles__fallback[data-visible="false"] {
   position: absolute;
   width: 1px;
@@ -827,17 +882,16 @@ body.immersive {
   position: absolute;
   z-index: 3;
   left: 50%;
-  bottom: clamp(2rem, 12vh, 6rem);
+  bottom: max(clamp(3.15rem, 12dvh, 6rem), calc(2.75rem + env(safe-area-inset-bottom)));
   transform: translateX(-50%);
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 0.9rem;
+  gap: 0.75rem;
   width: max-content;
-  max-width: calc(100vw - 2rem);
+  max-width: calc(100vw - 1.5rem);
 }
 
-/* Cursor Glow Base & Patterns */
 .wormhole-nav__btn {
   touch-action: manipulation;
   padding: 0.78rem 1.55rem;
@@ -856,36 +910,34 @@ body.immersive {
   transition: transform 150ms ease, border-color 180ms ease, box-shadow 180ms ease, color 160ms ease;
 }
 
-.post-article {
-  transform-origin: top left;
+.home-micro-footer {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  bottom: max(0.85rem, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0.55rem;
+  align-items: center;
+  font-size: 0.88rem;
+  letter-spacing: 0.06em;
+  color: rgba(235, 251, 255, 0.58);
+  white-space: nowrap;
 }
 
-.post-card {
-  --glow-radius: 340px;
-  --rim-radius: 260px;
-  padding: 1.3em 1.35em;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background:
-    radial-gradient(circle at 12% 14%, rgba(var(--glow-rgb), 0.09), transparent 52%),
-    linear-gradient(145deg, rgba(255, 255, 255, 0.42), transparent 65%),
-    var(--surface);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.65),
-    0 6px 20px rgba(15, 25, 40, 0.07);
-  transition: border-color 180ms ease, box-shadow 220ms ease, transform 160ms ease;
+.home-micro-footer a {
+  color: inherit;
+  text-decoration: none;
 }
 
-html.dark .post-card {
-  background:
-    radial-gradient(circle at 12% 14%, rgba(var(--glow-rgb), 0.09), transparent 52%),
-    linear-gradient(145deg, rgba(130, 195, 255, 0.06), transparent 60%),
-    var(--surface);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    inset 0 0 24px rgba(0, 0, 0, 0.22);
+.home-micro-footer a:hover {
+  color: #ffffff;
+  text-shadow: 0 0 12px rgba(20, 216, 232, 0.65);
 }
 
+/* ==========================================================================
+   9. Cursor Glow Interactive Surfaces
+   ========================================================================== */
 .wormhole-nav__btn,
 .post-card,
 .clear-btn,
@@ -993,6 +1045,303 @@ html.dark .post-card {
   cursor: pointer;
 }
 
+/* ==========================================================================
+   10. Canonical Scaled Codex Content & Illuminated Prose
+   ========================================================================== */
+.page-scale-frame {
+  width: 100%;
+  margin: 0 auto;
+}
+
+.page-scale-content {
+  width: 29rem;
+  font-size: 1.125rem;
+  line-height: 1.62;
+  transform-origin: top left;
+  overflow-wrap: anywhere;
+}
+
+.page-scale-content h1 {
+  font-size: 1.85em;
+  line-height: 1.2;
+  margin: 0 0 0.45em;
+}
+
+.page-scale-content h2 {
+  font-size: 1.44em;
+  line-height: 1.24;
+}
+
+.page-scale-content h3 {
+  font-size: 1.2em;
+  line-height: 1.28;
+}
+
+.page-scale-content p {
+  margin: 0 0 1.12em;
+}
+
+.page-lede {
+  color: var(--muted);
+  font-size: 1.12em;
+  line-height: 1.5;
+  margin: 0 0 1.25em;
+}
+
+/* Illuminated Headings & Inline Semantics */
+.site-main h1 {
+  color: #0b635a;
+  text-shadow: 0 0 16px rgba(16, 185, 129, 0.28), 0 0 28px rgba(56, 189, 248, 0.16);
+}
+html.dark .site-main h1 {
+  color: #9effdf;
+  text-shadow: 0 0 22px rgba(92, 242, 190, 0.35);
+}
+
+.site-main h2 {
+  margin: 2em 0 0.65em;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--border);
+  color: #0369a1;
+  text-shadow: 0 0 14px rgba(14, 165, 233, 0.22);
+}
+.site-main h2::before {
+  content: "✦ ";
+  color: #d97706;
+  text-shadow: 0 0 10px rgba(245, 158, 11, 0.45);
+  font-size: 0.85em;
+}
+html.dark .site-main h2 {
+  color: #6ceeff;
+  text-shadow: 0 0 18px rgba(108, 238, 255, 0.28);
+}
+html.dark .site-main h2::before {
+  color: #ffd479;
+  text-shadow: 0 0 10px rgba(255, 212, 121, 0.65);
+}
+
+.site-main h3 {
+  margin: 1.6em 0 0.45em;
+  color: #6d28d9;
+  text-shadow: 0 0 12px rgba(139, 92, 246, 0.22);
+}
+html.dark .site-main h3 {
+  color: #d7a6ff;
+  text-shadow: 0 0 14px rgba(215, 166, 255, 0.28);
+}
+
+.site-main strong {
+  color: #b45309;
+  text-shadow: 0 0 10px rgba(245, 158, 11, 0.2);
+}
+html.dark .site-main strong {
+  color: #ffd584;
+  text-shadow: 0 0 10px rgba(255, 213, 132, 0.24);
+}
+
+.site-main em {
+  color: #7e22ce;
+  text-shadow: 0 0 10px rgba(168, 85, 247, 0.18);
+}
+html.dark .site-main em {
+  color: #e4b8ff;
+}
+
+.site-main a {
+  text-shadow: 0 0 10px rgba(16, 185, 129, 0.16);
+}
+html.dark .site-main a {
+  text-shadow: 0 0 12px rgba(92, 242, 190, 0.24);
+}
+
+/* Editorial Post Header & Prose */
+.post-article {
+  transform-origin: top left;
+}
+
+.post-header {
+  text-align: center;
+  margin-bottom: 1.85em;
+  padding-bottom: 1.15em;
+  border-bottom: 1px solid var(--border);
+}
+
+.post-header h1 {
+  margin: 0.3em 0 0.4em;
+}
+
+.post-description {
+  color: var(--muted);
+  font-size: 1em;
+  line-height: 1.5;
+  margin: 0 0 0.9em;
+}
+
+.post-header .tag-list {
+  justify-content: center;
+  margin-top: 0.8em;
+}
+
+.post-header h1,
+.post-description,
+.post-card__link h2,
+.post-card__link p {
+  white-space: pre-line;
+}
+
+.about-centered {
+  text-align: center;
+}
+
+.prose {
+  width: 100%;
+  margin: 0;
+  font-size: 1em;
+  line-height: 1.62;
+}
+
+.prose ul,
+.prose ol {
+  margin: 0 0 1.15em;
+  padding-left: 1.35em;
+}
+
+.prose li + li {
+  margin-top: 0.42em;
+}
+
+.prose ul li::marker,
+.marker::marker {
+  content: "◈ ";
+  color: #0c7a6f;
+}
+
+html.dark .prose ul li::marker,
+html.dark .marker::marker {
+  content: "◈ ";
+  color: #5cf2be;
+}
+
+.prose ol li::marker {
+  font-weight: 700;
+  color: #7c3aed;
+}
+
+html.dark .prose ol li::marker {
+  color: #ffd479;
+}
+
+.prose blockquote {
+  margin: 1.45em 0;
+  padding: 0.85em 1.15em;
+  border-left: 3px solid var(--accent);
+  border-radius: 0 10px 10px 0;
+  background: rgba(16, 185, 129, 0.08);
+  box-shadow: 0 0 18px rgba(16, 185, 129, 0.1);
+  font-style: italic;
+}
+
+.prose :not(pre) > code {
+  padding: 0.14em 0.42em;
+  border-radius: 6px;
+  font-size: 0.86em;
+  color: #0e7490;
+  background: rgba(14, 165, 233, 0.12);
+  border: 1px solid rgba(14, 165, 233, 0.28);
+  box-shadow: 0 0 10px rgba(14, 165, 233, 0.15);
+}
+
+html.dark .prose :not(pre) > code {
+  color: #8cf3ff;
+  background: rgba(34, 211, 238, 0.11);
+  border: 1px solid rgba(103, 232, 249, 0.28);
+  text-shadow: 0 0 8px rgba(103, 232, 249, 0.3);
+}
+
+.prose pre.astro-code {
+  font-size: 0.82em;
+  line-height: 1.5;
+  margin: 1.3em 0;
+  padding: 1.05em 1.15em;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  overflow-x: auto;
+  box-shadow: 0 6px 24px rgba(15, 118, 110, 0.14);
+}
+
+html.dark .prose pre.astro-code,
+html.dark .prose pre.astro-code span {
+  color: var(--shiki-dark) !important;
+  background-color: var(--shiki-dark-bg) !important;
+  font-style: var(--shiki-dark-font-style) !important;
+  font-weight: var(--shiki-dark-font-weight) !important;
+  text-decoration: var(--shiki-dark-text-decoration) !important;
+}
+
+html.dark .prose pre.astro-code {
+  border-color: rgba(110, 231, 183, 0.32);
+  box-shadow: inset 0 0 24px rgba(110, 231, 183, 0.06), 0 8px 28px rgba(0, 0, 0, 0.5);
+}
+
+.prose img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.35);
+}
+
+/* ==========================================================================
+   11. Interactive MDX Shader Visualizers
+   ========================================================================== */
+.arcane-viz {
+  margin: 1.55em 0;
+  padding: 0.95em 1.05em;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: 0 0 24px rgba(var(--glow-rgb), 0.12);
+}
+
+.arcane-viz__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.7em 1.15em;
+  margin-bottom: 0.75em;
+  font-size: 0.88em;
+}
+
+.arcane-viz__controls label {
+  display: flex;
+  align-items: center;
+  gap: 0.45em;
+  min-width: 0;
+}
+
+.arcane-viz__controls input[type="range"] {
+  accent-color: var(--accent);
+  max-width: 100%;
+  min-width: 0;
+}
+
+.arcane-viz__canvas {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 8px;
+  border: 1px solid rgba(var(--glow-rgb), 0.28);
+}
+
+.arcane-viz__note {
+  margin: 0.6em 0 0;
+  font-size: 0.86em;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* ==========================================================================
+   12. Search, Tags, Post Cards & Mushroom Effects
+   ========================================================================== */
 .search-controls {
   display: flex;
   gap: 0.7em;
@@ -1009,6 +1358,7 @@ html.dark .post-card {
   color: var(--text);
   font: inherit;
 }
+
 .search-input:focus {
   outline: none;
   border-color: var(--gold);
@@ -1046,7 +1396,6 @@ html.dark .tag-pill {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='80' viewBox='0 0 320 80' fill='none'%3E%3Cg fill='rgba(92,242,190,0.24)'%3E%3Ccircle cx='18' cy='19' r='0.7'/%3E%3Ccircle cx='49' cy='61' r='0.6'/%3E%3Ccircle cx='72' cy='28' r='0.8'/%3E%3Ccircle cx='97' cy='53' r='0.6'/%3E%3Ccircle cx='128' cy='14' r='0.7'/%3E%3Ccircle cx='154' cy='66' r='0.8'/%3E%3Ccircle cx='181' cy='31' r='0.6'/%3E%3Ccircle cx='211' cy='62' r='0.7'/%3E%3Ccircle cx='238' cy='17' r='0.8'/%3E%3Ccircle cx='267' cy='54' r='0.6'/%3E%3Ccircle cx='296' cy='21' r='0.7'/%3E%3Ccircle cx='311' cy='65' r='0.6'/%3E%3Ccircle cx='33' cy='43' r='0.55'/%3E%3Ccircle cx='112' cy='38' r='0.55'/%3E%3Ccircle cx='194' cy='12' r='0.55'/%3E%3Ccircle cx='252' cy='37' r='0.55'/%3E%3C/g%3E%3Cg fill='rgba(140,243,255,0.46)'%3E%3Ccircle cx='39' cy='14' r='1.2'/%3E%3Ccircle cx='85' cy='46' r='1.1'/%3E%3Ccircle cx='141' cy='41' r='1.3'/%3E%3Ccircle cx='169' cy='19' r='1'/%3E%3Ccircle cx='226' cy='45' r='1.2'/%3E%3Ccircle cx='284' cy='41' r='1.1'/%3E%3Cpath d='M61 54l.9 2.4 2.4.9-2.4.9-.9 2.4-.9-2.4-2.4-.9 2.4-.9z'/%3E%3Cpath d='M198 55l1 2.7 2.7 1-2.7 1-1 2.7-1-2.7-2.7-1 2.7-1z'/%3E%3Cpath d='M271 15l.8 2.1 2.1.8-2.1.8-.8 2.1-.8-2.1-2.1-.8 2.1-.8z'/%3E%3C/g%3E%3C/svg%3E");
 }
 
-/* Give neighboring pills different slices of the starfield */
 .tag-filter-row > .tag-pill:nth-child(7n + 2),
 .tag-list > li:nth-child(7n + 2) .tag-pill,
 .tag-grid > li:nth-child(7n + 2) .tag-pill { --sky-pos: 68% 69%; }
@@ -1086,6 +1435,32 @@ html.dark .tag-pill {
   gap: 1.2em;
 }
 
+.post-card {
+  --glow-radius: 340px;
+  --rim-radius: 260px;
+  padding: 1.3em 1.35em;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background:
+    radial-gradient(circle at 12% 14%, rgba(var(--glow-rgb), 0.09), transparent 52%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.42), transparent 65%),
+    var(--surface);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.65),
+    0 6px 20px rgba(15, 25, 40, 0.07);
+  transition: border-color 180ms ease, box-shadow 220ms ease, transform 160ms ease;
+}
+
+html.dark .post-card {
+  background:
+    radial-gradient(circle at 12% 14%, rgba(var(--glow-rgb), 0.09), transparent 52%),
+    linear-gradient(145deg, rgba(130, 195, 255, 0.06), transparent 60%),
+    var(--surface);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 0 24px rgba(0, 0, 0, 0.22);
+}
+
 .post-card__link {
   text-decoration: none;
   color: inherit;
@@ -1099,6 +1474,7 @@ html.dark .tag-pill {
   border-bottom: none;
   color: var(--accent);
 }
+
 .post-card__link h2::before {
   content: none;
 }
@@ -1152,128 +1528,9 @@ html.dark .tag-pill {
   100% { opacity: 0; transform: translate(-50%, -34px); }
 }
 
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-}
-
-.post-header h1,
-.post-description,
-.post-card__link h2,
-.post-card__link p {
-  white-space: pre-line;
-}
-
-/* Language Button & Arcane Dropdown */
-.arcane-btn--lang {
-  font-family: var(--font-display);
-}
-
-.lang-code {
-  font-size: 1.05rem;
-  font-weight: 800;
-  letter-spacing: 0.03em;
-  line-height: 1;
-}
-
-@media (pointer: coarse) {
-  .lang-code {
-    font-size: 1.12rem;
-  }
-}
-
-.lang-popover {
-  position: fixed;
-  z-index: 50;
-  min-width: 158px;
-  padding: 0.4rem;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  background: var(--sheet-bg);
-  color: var(--text);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35), 0 0 22px rgba(var(--glow-rgb), 0.18);
-  display: grid;
-  gap: 0.2rem;
-}
-
-.lang-popover[hidden] {
-  display: none;
-}
-
-html.immersive .lang-popover {
-  background: rgba(12, 18, 32, 0.78);
-  backdrop-filter: blur(14px) saturate(140%);
-  -webkit-backdrop-filter: blur(14px) saturate(140%);
-  border-color: rgba(72, 224, 180, 0.45);
-  color: #e9fff7;
-}
-
-html.crystal .lang-popover {
-  backdrop-filter: blur(16px) saturate(140%);
-  -webkit-backdrop-filter: blur(16px) saturate(140%);
-}
-
-.lang-option {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-  padding: 0.45rem 0.65rem;
-  border-radius: 8px;
-  border: 1px solid transparent;
-  color: inherit;
-  text-decoration: none;
-  font-size: 0.9rem;
-  line-height: 1.2;
-  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
-}
-
-.lang-option:hover,
-.lang-option:focus-visible {
-  outline: none;
-  background: rgba(var(--glow-rgb), 0.14);
-  border-color: rgba(var(--glow-rgb), 0.4);
-}
-
-.lang-option.is-active {
-  background: rgba(var(--glow-rgb), 0.18);
-  border-color: rgba(var(--glow-rgb), 0.5);
-  color: var(--accent);
-  font-weight: 700;
-}
-
-html.immersive .lang-option.is-active {
-  color: #5cf2be;
-}
-
-.lang-option__code {
-  font-family: var(--font-display);
-  font-size: 0.74rem;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  opacity: 0.75;
-  min-width: 1.6em;
-}
-
-.lang-option__name {
-  flex: 1;
-}
-
-.lang-option__mark {
-  font-size: 0.78rem;
-  opacity: 0.9;
-}
-
-@media (max-width: 400px) {
-  .arcane-controls {
-    gap: 0.35rem;
-  }
-}
-
-/* Magnificent Glowing Pink Mantra + Flying Stars */
+/* ==========================================================================
+   13. Glowing Pink Mantra & Orbiting Stars (About Page)
+   ========================================================================== */
 .shader-mantra-line {
   margin: 0.35em 0 1.45em;
   text-align: center;
@@ -1318,12 +1575,9 @@ html.dark .shader-mantra {
 }
 
 .shader-mantra.is-shuffling .mantra-text {
-  animation:
-    mantra-swap 380ms cubic-bezier(0.22, 1, 0.36, 1),
-    mantra-pulse 3.6s ease-in-out infinite;
+  animation: mantra-swap 380ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* Soft pink mist aura behind the text */
 .shader-mantra::before {
   content: "";
   position: absolute;
@@ -1438,20 +1692,6 @@ html.dark .shader-mantra {
   }
 }
 
-@keyframes mantra-pulse {
-  0%, 100% {
-    text-shadow:
-      0 0 10px var(--pink-glow-a),
-      0 0 22px var(--pink-glow-b);
-  }
-  50% {
-    text-shadow:
-      0 0 14px var(--pink-glow-a),
-      0 0 32px var(--pink-glow-a),
-      0 0 44px var(--pink-glow-b);
-  }
-}
-
 @keyframes mantra-swap {
   0% {
     opacity: 0.25;
@@ -1469,11 +1709,43 @@ html.dark .shader-mantra {
   }
 }
 
+/* ==========================================================================
+   14. Responsive & Reduced Motion
+   ========================================================================== */
+@media (max-width: 400px) {
+  .arcane-controls {
+    gap: 0.35rem;
+  }
+}
+
+@media (max-width: 480px), (max-height: 500px) {
+  .wormhole-home__nav {
+    gap: 0.55rem;
+  }
+  .wormhole-nav__btn {
+    padding: 0.62rem 1.05rem;
+    font-size: 0.84rem;
+    letter-spacing: 0.07em;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .mantra-text,
   .mantra-star,
-  .shader-mantra.is-shuffling .mantra-text {
+  .shader-mantra.is-shuffling .mantra-text,
+  .arcane-btn--settings[aria-expanded="true"] .settings-ring,
+  .settings-popover:not([hidden]),
+  .settings-subpanel:not([hidden]) {
     animation: none;
+  }
+  .settings-ring,
+  .settings-gear,
+  .settings-core,
+  .sigil-pause,
+  .sigil-play,
+  .sigil-sun,
+  .sigil-moon {
+    transition: none;
   }
   .mantra-star {
     opacity: 0.85;

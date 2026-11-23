@@ -13,6 +13,9 @@ function attachScaler(): void {
   const content = document.querySelector<HTMLElement>("[data-page-scale-content]");
   if (!frame || !content) return;
 
+  let lastTransform = content.style.transform;
+  let lastHeight = frame.style.height;
+
   const sync = () => {
     const baseWidth = content.offsetWidth;
     const availWidth = frame.clientWidth;
@@ -22,12 +25,23 @@ function attachScaler(): void {
     const scale = Math.min(targetScale, availWidth / baseWidth);
     const offsetX = Math.max(0, (availWidth - baseWidth * scale) / 2);
 
+    let nextTransform = "";
+    let nextHeight = "";
+
     if (Math.abs(scale - 1) < 0.001) {
-      content.style.transform = offsetX >= 0.5 ? `translateX(${offsetX}px)` : "";
-      frame.style.height = "";
+      nextTransform = offsetX >= 0.5 ? `translateX(${offsetX}px)` : "";
     } else {
-      content.style.transform = `translateX(${offsetX}px) scale(${scale})`;
-      frame.style.height = `${content.offsetHeight * scale}px`;
+      nextTransform = `translateX(${offsetX}px) scale(${scale})`;
+      nextHeight = `${content.offsetHeight * scale}px`;
+    }
+
+    if (nextTransform !== lastTransform) {
+      content.style.transform = nextTransform;
+      lastTransform = nextTransform;
+    }
+    if (nextHeight !== lastHeight) {
+      frame.style.height = nextHeight;
+      lastHeight = nextHeight;
     }
   };
 

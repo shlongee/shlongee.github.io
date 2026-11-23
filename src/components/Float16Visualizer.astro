@@ -77,32 +77,40 @@ const labels = {
         { label: root.dataset.label64bit || "64-bit HDR (R16G16B16A16)", fn: (v: number) => quantizeFloat(v, 10) },
       ];
 
+      const w = canvas.width;
+      const barH = 40;
+      const gap = 22;
+      const barImg = ctx.createImageData(w, barH);
+      const rowBytes = w * 4;
+
       const draw = () => {
         const intensity = parseFloat(sInt.value);
         const maxGlow = parseFloat(sMax.value);
         lInt.textContent = `${intensity.toFixed(1)}x`;
         lMax.textContent = maxGlow.toFixed(2);
 
-        const w = canvas.width;
-        const barH = 40;
-        const gap = 22;
-
         ctx.fillStyle = "#080d18";
         ctx.fillRect(0, 0, w, canvas.height);
+
+        const data = barImg.data;
+        ctx.fillStyle = "#dffaff";
+        ctx.font = "12px monospace";
 
         formats.forEach((fmt, idx) => {
           const y = 22 + idx * (barH + gap);
           for (let px = 0; px < w; px++) {
             const q = fmt.fn((px / (w - 1)) * maxGlow);
             const t = Math.min(1, q * intensity);
-            const r = Math.round(t * 95);
-            const g = Math.round(t * 240);
-            const b = Math.round(t * 255);
-            ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
-            ctx.fillRect(px, y, 1, barH);
+            const p = px * 4;
+            data[p] = Math.round(t * 95);
+            data[p + 1] = Math.round(t * 240);
+            data[p + 2] = Math.round(t * 255);
+            data[p + 3] = 255;
           }
-          ctx.fillStyle = "#dffaff";
-          ctx.font = "12px monospace";
+          for (let row = 1; row < barH; row++) {
+            data.copyWithin(row * rowBytes, 0, rowBytes);
+          }
+          ctx.putImageData(barImg, 0, y);
           ctx.fillText(fmt.label, 8, y - 6);
         });
       };
