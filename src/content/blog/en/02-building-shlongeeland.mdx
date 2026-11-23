@@ -1,11 +1,8 @@
 ---
 title: |-
-  Persistent WebGL Shaders
-  & Particle Text in Astro
+  Persistent WebGL Shaders & Particle Text in Astro
 description: |-
-  Three.js WebGL canvas alive across Astro routes,
-  fix GLSL atan() seams,
-  and render instanced particle text.
+  Three.js WebGL canvas alive across Astro routes, fix GLSL atan() seams and render instanced particle text.
 pubDate: 2026-11-21
 tags: ["astro", "webgl", "threejs", "glsl", "shaders"]
 ---
@@ -13,25 +10,24 @@ tags: ["astro", "webgl", "threejs", "glsl", "shaders"]
 import SeamVisualizer from '../../../components/SeamVisualizer.astro';
 import ParticleBloomVisualizer from '../../../components/ParticleBloomVisualizer.astro';
 
-This site pairs [Astro](/tags/astro/) static pages with [Three.js](/tags/threejs/) and [WebGL](/tags/webgl/) shaders.<br/>
+This site pairs [Astro](/tags/astro/) static pages with [Three.js](/tags/threejs/) and [WebGL](/tags/webgl/) shaders.
 Here is how the pieces fit together:
 
 ## 1. Persistent Canvas via Astro ClientRouter
-Jumping from **Home** to **Blog** never resets the aurora.<br/>
-Astro’s `ClientRouter` swaps page content while<br/>
-`transition:persist` keeps the WebGL `<canvas>` running.
+Jumping from **Home** to **Blog** never resets the aurora.
+Astro’s `ClientRouter` swaps page content while `transition:persist` keeps the WebGL `<canvas>` running.
 
 ## 2. Fixing the Polar atan() Seam in GLSL
-Raw `atan(y, x)` jumps sharply where `−π` wraps to `+π`.<br/>
-Feeding seamless circle coords `(cosθ, sinθ, depth)`<br/>
+Raw `atan(y, x)` jumps sharply where `−π` wraps to `+π`.
+Feeding seamless circle coords `(cosθ, sinθ, depth)`
 into 3D noise with a gentle helical wobble heals the seam:
 
 <SeamVisualizer />
 
 ## 3. Instanced Three.js Title Particles
-To render **SHLONGEELAND** in particles,<br/>
-we draw the title to a 2D canvas,<br/>
-spawn quads with `InstancedBufferGeometry`,<br/>
+To render **SHLONGEELAND** in particles,
+we draw the title to a 2D canvas,
+spawn quads with `InstancedBufferGeometry`,
 and shade each dot with a **core + halo** glow:
 
 ```glsl
@@ -42,15 +38,13 @@ float halo = exp(-d * 2.4) * 0.58;
 <ParticleBloomVisualizer />
 
 ## 4. 3D Mushrooms & Static Preact Search
-* **3D Mushrooms:**<br/>
-Built with `LatheGeometry` and Fresnel rim lighting,<br/>
+* **3D Mushrooms:** Built with `LatheGeometry` and Fresnel rim lighting,
 drifting with the stars and clickable via `Raycaster`.
-* **Instant Search:**<br/>
-A compile-time `/search-index.json` powers live tag<br/>
+* **Instant Search:** A compile-time `/search-index.json` powers live tag
 and word filtering in **Preact** with zero backend.
 
-## Related Spells
-* Read how soft HDR glow avoids banding in<br/>
+## Related topics
+* Read how soft HDR glow avoids banding:<br/>
 [HDR Bloom in Raylib: Fixing Banding with Float16](/blog/01-hdr-bloom-report/).
-* Browse more reports in<br/>
+* Browse more reports in
 [#shaders](/tags/shaders/) and [#threejs](/tags/threejs/).

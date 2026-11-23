@@ -30,7 +30,7 @@ void main() {
   vPUv = puv;
 
   vec4 color = texture2D(uTexture, puv);
-  float grey = color.r * 0.21 + color.g * 0.71 + color.b * 0.07;
+  float grey = color.r * 0.33 + color.g * 0.33 + color.b * 0.33;
   
   vec3 displaced = vec3(offset, 0.0);
   float r1 = hash1(pindex);
@@ -48,7 +48,7 @@ void main() {
   displaced.z += touch * 22.0 * rndz;
 
   vShimmer = 0.78 + 0.22 * sin(uTime * 2.2 + pindex * 0.73);
-  float particleSize = (1.1 + wave * 0.9) * max(grey, 0.25) * uSize;
+  float particleSize = (1.0 + wave * 0.65) * max(grey, 0.75) * uSize;
   displaced.xy += position.xy * particleSize;
 
   gl_Position = projectionMatrix * modelViewMatrix * vec4(displaced, 1.0);

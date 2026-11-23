@@ -17,6 +17,22 @@ interface Props {
 const { lang } = Astro.props;
 const t = useTranslations(lang);
 
+const MANTRAS: Record<Lang, string[]> = {
+  en: [
+    "Tame the shader before it eats your frame! :P",
+    "Bugs are just spells in disguise!",
+    "Powered by kombucha!",
+  ],
+  ru: [
+    "Каждый баг — лишь заклинание, что нужно разгадать!",
+    "Приручите свои шейдеры пока они не съели фпс! :P",
+    "Сделано при поддержке чайного гриба.",
+  ],
+};
+
+const mantras = MANTRAS[lang];
+const shuffleHint = lang === "ru" ? "Нажмите, чтобы получить новый факт :3" : "Click for another fact :3";
+
 const breadcrumbs = [
   { name: t("nav.home"), path: localePath(lang, "/") },
   { name: t("nav.about"), path: localePath(lang, "/about/") },
@@ -43,36 +59,43 @@ const breadcrumbs = [
         </p>
 
         <p class="shader-mantra-line">
-          <span class="shader-mantra">
-            <span class="mantra-text">Каждый баг — лишь заклинание, что нужно разгадать!</span>
+          <button
+            type="button"
+            class="shader-mantra"
+            data-mantra-shuffle
+            data-mantras={JSON.stringify(mantras)}
+            title={shuffleHint}
+          >
+            <span class="mantra-text" data-mantra-text aria-live="polite">
+              {mantras[0]}
+            </span>
             <span class="mantra-star mantra-star--1" aria-hidden="true">✦</span>
             <span class="mantra-star mantra-star--2" aria-hidden="true">✧</span>
             <span class="mantra-star mantra-star--3" aria-hidden="true">⋆</span>
             <span class="mantra-star mantra-star--4" aria-hidden="true">✦</span>
             <span class="mantra-star mantra-star--5" aria-hidden="true">✧</span>
             <span class="mantra-star mantra-star--6" aria-hidden="true">⋆</span>
-          </span>
+          </button>
         </p>
-        
       </div>
 
       <h2>Вас ждёт:</h2>
       <p>
         Живая визуализация кода, Замеры производительности <br />
-        и Чистые примеры шейдеров по трём темам:
+        и чистые Примеры шейдеров по трём темам:
       </p>
       <ul>
-        <li>
+        <li class="marker">
           <strong>Рендеринг в реальном времени и HDR:</strong><br />
           Многоуровневый bloom, мягкий порог (soft-knee)<br />
           и точность FP16 в <a href="/ru/tags/raylib/">Raylib</a> и <a href="/ru/tags/hdr/">HDR</a>.
         </li>
-        <li>
+        <li class="marker">
           <strong>WebGL и шейдеры:</strong><br />
           Туннели на кастомном RawShaderMaterial, бесшовный шум,<br />
           текст из частиц и 3D-меши в <a href="/ru/tags/threejs/">Three.js</a>.
         </li>
-        <li>
+        <li class="marker">
           <strong>Инженерия на Astro:</strong><br />
           Непрерывный WebGL-холст с <a href="/ru/tags/astro/">Astro</a> ClientRouter,<br />
           виджеты на MDX и мгновенный поиск на Preact.
@@ -97,36 +120,42 @@ const breadcrumbs = [
         </p>
 
         <p class="shader-mantra-line">
-          <span class="shader-mantra">
-            <span class="mantra-text">Tame the shader before it eats your frame! :p</span>
+          <button
+            type="button"
+            class="shader-mantra"
+            data-mantra-shuffle
+            data-mantras={JSON.stringify(mantras)}
+            title={shuffleHint}
+          >
+            <span class="mantra-text" data-mantra-text aria-live="polite">
+              {mantras[0]}
+            </span>
             <span class="mantra-star mantra-star--1" aria-hidden="true">✦</span>
             <span class="mantra-star mantra-star--2" aria-hidden="true">✧</span>
             <span class="mantra-star mantra-star--3" aria-hidden="true">⋆</span>
             <span class="mantra-star mantra-star--4" aria-hidden="true">✦</span>
             <span class="mantra-star mantra-star--5" aria-hidden="true">✧</span>
             <span class="mantra-star mantra-star--6" aria-hidden="true">⋆</span>
-          </span>
+          </button>
         </p>
-
       </div>
 
       <h2>What You Will Find Here</h2>
       <p>
-        Each report pairs interactive visualizers with profiled timings<br />and clean shader code across
+        Each report pairs interactive visualizers with profiled timings and clean shader code across
         three topics:
       </p>
       <ul>
-        <li>
+        <li class="marker">
           <strong>Real-Time Rendering &amp; HDR:</strong><br />
-          Multi-mip bloom, soft-knee thresholds,<br />
-          and FP16 precision in <a href="/tags/raylib/">Raylib</a> and <a href="/tags/hdr/">HDR</a>.
+Multi-mip bloom, soft-knee thresholds, and FP16 precision<br/> in <a href="/tags/raylib/">Raylib</a> and <a href="/tags/hdr/">HDR</a>.
         </li>
-        <li>
+        <li class="marker">
           <strong>WebGL &amp; Shaders:</strong><br />
           Custom RawShaderMaterial tunnels, seamless noise,<br />
           particle text, and 3D meshes in <a href="/tags/threejs/">Three.js</a>.
         </li>
-        <li>
+        <li class="marker">
           <strong>Astro Engineering:</strong><br />
           Persistent WebGL canvases with <a href="/tags/astro/">Astro</a> ClientRouter,<br />
           MDX widgets, and Preact search.
@@ -134,9 +163,53 @@ const breadcrumbs = [
       </ul>
 
       <p>
-        Read the <a href="/blog/">devlog</a>, explore <a href="/tags/glsl/">GLSL</a>,
-        browse <a href="/tags/">tags</a>, or follow via <a href="/rss.xml">RSS</a>.
+        <strong>Feel free to</strong> read the <a href="/blog/">devlog</a>, browse by <a href="/tags/">tags</a>, or follow via <a href="/rss.xml">RSS</a>!
       </p>
     </>
   )}
 </BaseLayout>
+
+<script>
+  function initMantraShuffle() {
+    document.querySelectorAll<HTMLButtonElement>("[data-mantra-shuffle]").forEach((btn) => {
+      if (btn.dataset.mantraInit) return;
+      btn.dataset.mantraInit = "true";
+
+      const raw = btn.dataset.mantras;
+      const textEl = btn.querySelector<HTMLElement>("[data-mantra-text]");
+      if (!raw || !textEl) return;
+
+      let list: string[] = [];
+      try {
+        list = JSON.parse(raw);
+      } catch {
+        return;
+      }
+      if (list.length < 2) return;
+
+      let bag: number[] = [];
+      let currentIdx = 0;
+
+      const nextIndex = () => {
+        if (bag.length === 0) {
+          bag = list.map((_, i) => i).filter((i) => i !== currentIdx);
+          for (let i = bag.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [bag[i], bag[j]] = [bag[j], bag[i]];
+          }
+        }
+        currentIdx = bag.pop()!;
+        return currentIdx;
+      };
+
+      btn.addEventListener("click", () => {
+        textEl.textContent = list[nextIndex()];
+        btn.classList.remove("is-shuffling");
+        void btn.offsetWidth;
+        btn.classList.add("is-shuffling");
+      });
+    });
+  }
+
+  document.addEventListener("astro:page-load", initMantraShuffle);
+</script>

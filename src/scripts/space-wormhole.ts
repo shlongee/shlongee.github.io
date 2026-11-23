@@ -48,8 +48,10 @@ export function mountSpaceWormhole(): void {
     isDarkTheme() ? DARK_PALETTES[darkIndex] : LIGHT_PALETTES[lightIndex];
   
   const initial = getInitialPalette();
+  let currentPalette = initial;
 
   const publishPalette = (palette: WormholePalette) => {
+    currentPalette = palette;
     document.documentElement.dataset.auroraBase = palette.base;
     document.documentElement.dataset.auroraAccent = palette.accent;
     window.dispatchEvent(new CustomEvent("shlongeeland:palette", { detail: palette }));
@@ -609,6 +611,10 @@ export function mountSpaceWormhole(): void {
       rafId = 0;
     }
   });
+  document.addEventListener("astro:after-swap", () => {
+    publishPalette(currentPalette);
+  });
+  document.addEventListener("astro:page-load", onPageLoad);
 
   if (reducedMotion) {
     requestAnimationFrame(animate);

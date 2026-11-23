@@ -11,9 +11,6 @@ const isRu = lang === "ru";
 
 const coreLabel = isRu ? "Резкость ядра:" : "Core Sharpness:";
 const haloLabel = isRu ? "Свечение ореола:" : "Halo Glow:";
-const note = isRu
-  ? "Сочетание плотного ядра с экспоненциальным ореолом сохраняет читаемость букв и мягкое свечение!"
-  : "Combining a tight core with an exponential halo keeps letters readable while glowing softly!";
 ---
 
 <div class="arcane-viz bloom-viz">
@@ -28,7 +25,6 @@ const note = isRu
     </label>
   </div>
   <canvas class="arcane-viz__canvas bloom-canvas" width="520" height="140"></canvas>
-  <p class="arcane-viz__note">{note}</p>
 </div>
 
 <script>

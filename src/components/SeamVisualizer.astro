@@ -12,9 +12,6 @@ const isRu = lang === "ru";
 const swirlLabel = isRu ? "Закручивание:" : "Swirl:";
 const modeSeam = isRu ? "Режим: шов atan()" : "Mode: atan() Seam";
 const modeSeamless = isRu ? "Режим: бесшовный (cosθ, sinθ)" : "Mode: Seamless (cosθ, sinθ)";
-const note = isRu
-  ? "обратите внимание на резкий горизонтальный разрез в режиме atan() :3"
-  : "notice the sharp horizontal cut in atan() mode :3";
 ---
 
 <div
@@ -30,7 +27,6 @@ const note = isRu
     <button type="button" class="clear-btn seam-mode">{modeSeam}</button>
   </div>
   <canvas class="arcane-viz__canvas seam-canvas" width="520" height="170"></canvas>
-  <p class="arcane-viz__note">{note}</p>
 </div>
 
 <script>

@@ -4,7 +4,8 @@ import { navigate } from "astro:transitions/client";
 const TOUCH_SIZE = 64;
 const TOUCH_MAX_AGE = 120;
 const TOUCH_RADIUS = 0.15;
-const SOURCE_THRESHOLD = 34;
+const SOURCE_THRESHOLD = 90;
+const PARTICLE_STEP = 1;
 const CAMERA_Z = 300;
 const CAMERA_FOV = 50;
 const MAX_SOURCE_WIDTH = 680;
@@ -224,8 +225,11 @@ function makeGeometry(
   height: number,
 ) {
   let count = 0;
-  for (let pixel = 0; pixel < pixels.length; pixel += 4) {
-    if (pixels[pixel] > SOURCE_THRESHOLD) count += 1;
+  for (let y = 0; y < height; y += PARTICLE_STEP) {
+    for (let x = 0; x < width; x += PARTICLE_STEP) {
+      if ((x + y) % 2 !== 0) continue;
+      if (pixels[(y * width + x) * 4] > SOURCE_THRESHOLD) count += 1;
+    }
   }
 
   const geometry = new THREE.InstancedBufferGeometry();
@@ -246,8 +250,9 @@ function makeGeometry(
   const offsets = new Float32Array(count * 2);
   const angles = new Float32Array(count);
   let instance = 0;
-  for (let y = 0; y < height; y += 1) {
-    for (let x = 0; x < width; x += 1) {
+  for (let y = 0; y < height; y +=  PARTICLE_STEP) {
+    for (let x = 0; x < width; x += PARTICLE_STEP) {
+      if ((x + y) % 2 !== 0) continue;
       if (pixels[(y * width + x) * 4] <= SOURCE_THRESHOLD) continue;
       indices[instance] = instance;
       offsets[instance * 2] = x;
@@ -366,7 +371,7 @@ async function initTitleParticles() {
   let animationFrame = 0;
   let resizeFrame = 0;
   let disposed = false;
-  let targetParticleSize = 1.2;
+  let targetParticleSize : number;
   let outro: {
     startedAt: number;
     random: number;
@@ -434,7 +439,7 @@ async function initTitleParticles() {
     const sourceHeight = Math.max(1, Math.round(visibleHeight * sourceScale));
     const inverseSourceScale = 1 / sourceScale;
 
-    targetParticleSize = viewportWidth <= 520 ? 2.65 : 2.45;
+    targetParticleSize = viewportWidth <= 520 ? 3.2 : 3.0;
 
     const source = makeTitleSource(title, sourceWidth, sourceHeight, fontFamily);
     const geometry = makeGeometry(source.pixels, sourceWidth, sourceHeight);
