@@ -44,20 +44,14 @@ const t = useTranslations(lang);
     title={t("controls.shuffleTitle")}
   >
     <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-      <circle
-        class="orb-ring"
-        cx="12" cy="12" r="9.5"
-        fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="2.5 2.2"
-      />
       <defs>
         <linearGradient id="wormhole-orb-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="var(--wormhole-base, #14d8e8)" />
-          <stop offset="50%" stop-color="var(--wormhole-warp, #24e6b5)" />
+          <stop offset="0%" stop-color="var(--wormhole-warp, #24e6b5)" />
+          <stop offset="50%" stop-color="var(--wormhole-base, #14d8e8)" />
           <stop offset="100%" stop-color="var(--wormhole-accent, #a66bff)" />
         </linearGradient>
       </defs>
-      <circle cx="12" cy="12" r="5.5" fill="url(#wormhole-orb-grad)" />
-      <circle cx="10.2" cy="10.2" r="1.4" fill="#ffffff" opacity="0.65" />
+      <circle cx="12" cy="12" r="10" fill="url(#wormhole-orb-grad)" />
     </svg>
   </button>
 
@@ -71,26 +65,16 @@ const t = useTranslations(lang);
     aria-label={t("controls.settingsAria")}
     title={t("controls.settingsTitle")}
   >
-    <svg class="arcane-settings-sigil" viewBox="0 0 24 24" width="21" height="21" aria-hidden="true">
-      <circle
-        class="settings-ring"
-        cx="12" cy="12" r="10.4"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1"
-        stroke-dasharray="2 2.4"
-      />
-      <g class="settings-gear" fill="none" stroke="currentColor" stroke-linecap="round">
-        <circle cx="12" cy="12" r="5.2" stroke-width="1.75" />
-        <path
-          stroke-width="2.1"
-          d="M12 4.3v1.6M12 18.1v1.6M4.3 12h1.6M18.1 12h1.6M6.7 6.7l1.2 1.2M16.1 16.1l1.2 1.2M17.3 6.7l-1.2 1.2M7.9 16.1l-1.2 1.2"
-        />
-      </g>
-      <path
+    <svg class="arcane-settings-sigil" width="24" height="24" fill="none" viewBox="0 0 24 24">
+      <path 
         class="settings-core"
         fill="currentColor"
-        d="M12 9.1l.75 2.15L14.9 12l-2.15.75L12 14.9l-.75-2.15L9.1 12l2.15-.75z"
+        d="M12 9c.3 0 .74 2.26.74 2.26S15 11.7 15 12s-2.26.74-2.26.74S12.3 15 12 15s-.74-2.26-.74-2.26S9 12.3 9 12s2.26-.74 2.26-.74S11.7 9 12 9"
+      />
+      <path 
+        class="settings-gear"
+        fill="currentColor"
+        d="M11.2 2.11a1 1 0 0 1 1.6 0l1.74 2.38c.23.3.6.46.97.4l2.91-.46a1 1 0 0 1 1.14 1.15l-.45 2.91a1 1 0 0 0 .4.97l2.38 1.73a1 1 0 0 1 0 1.62l-2.38 1.73a1 1 0 0 0-.4.97l.45 2.91a1 1 0 0 1-1.14 1.14l-2.91-.45a1 1 0 0 0-.97.4l-1.73 2.38a1 1 0 0 1-1.62 0l-1.73-2.38a1 1 0 0 0-.97-.4l-2.91.45a1 1 0 0 1-1.15-1.14l.46-2.91a1 1 0 0 0-.4-.97l-2.38-1.73a1 1 0 0 1 0-1.62l2.38-1.73a1 1 0 0 0 .4-.97l-.46-2.91a1 1 0 0 1 1.15-1.15l2.91.46a1 1 0 0 0 .97-.4zM12 6.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11"
       />
     </svg>
   </button>

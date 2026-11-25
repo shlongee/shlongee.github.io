@@ -490,33 +490,24 @@ html.immersive .arcane-btn--motion[aria-pressed="true"] {
   overflow: visible;
 }
 
-.settings-ring,
 .settings-gear,
 .settings-core {
   transform-origin: 12px 12px;
   transition:
     transform 420ms cubic-bezier(0.22, 1, 0.36, 1),
     opacity 240ms ease,
-    color 200ms ease;
-}
-
-.settings-ring {
-  opacity: 0.55;
+    color 240ms ease;
 }
 
 .settings-core {
-  opacity: 0.85;
+  opacity: 0.88;
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .arcane-btn--settings:hover .settings-gear {
+  .arcane-btn--settings[aria-expanded="false"]:hover .settings-gear {
     transform: rotate(45deg);
   }
-  .arcane-btn--settings:hover .settings-ring {
-    transform: rotate(-30deg);
-    opacity: 0.92;
-  }
-  .arcane-btn--settings:hover .settings-core {
+  .arcane-btn--settings[aria-expanded="false"]:hover .settings-core {
     transform: scale(1.18) rotate(-45deg);
     opacity: 1;
   }
@@ -528,27 +519,26 @@ html.immersive .arcane-btn--motion[aria-pressed="true"] {
 }
 
 .arcane-btn--settings[aria-expanded="true"] .settings-gear {
-  transform: rotate(90deg);
+  animation: settings-gear-spin 10s linear infinite;
 }
 
 .arcane-btn--settings[aria-expanded="true"] .settings-core {
   transform: scale(1.22) rotate(45deg);
-  color: var(--accent);
+  color: #0891b2; /* Blue in Light / Vellum theme */
   opacity: 1;
 }
 
-html.immersive .arcane-btn--settings[aria-expanded="true"] .settings-core {
-  color: #5cf2be;
+html.immersive:not(.dark) .arcane-btn--settings[aria-expanded="true"] .settings-core {
+  color: #38bdf8; /* Brighter blue on dark glass home dock in Light theme */
 }
 
-.arcane-btn--settings[aria-expanded="true"] .settings-ring {
-  opacity: 0.95;
-  animation: settings-orbit 14s linear infinite;
+html.dark .arcane-btn--settings[aria-expanded="true"] .settings-core {
+  color: #5cf2be; /* Green in Dark / Astral theme */
 }
 
-@keyframes settings-orbit {
+@keyframes settings-gear-spin {
   from { transform: rotate(0deg); }
-  to { transform: rotate(-360deg); }
+  to { transform: rotate(360deg); }
 }
 
 /* ==========================================================================
@@ -1733,12 +1723,11 @@ html.dark .shader-mantra {
   .mantra-text,
   .mantra-star,
   .shader-mantra.is-shuffling .mantra-text,
-  .arcane-btn--settings[aria-expanded="true"] .settings-ring,
+  .arcane-btn--settings[aria-expanded="true"] .settings-gear,
   .settings-popover:not([hidden]),
   .settings-subpanel:not([hidden]) {
     animation: none;
   }
-  .settings-ring,
   .settings-gear,
   .settings-core,
   .sigil-pause,
